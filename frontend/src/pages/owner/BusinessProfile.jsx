@@ -7,11 +7,17 @@ import {
   Typography,
   Row,
   Col,
-  InputNumber,
-  Switch,
-  Divider,
 } from 'antd';
-import { SaveOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import {
+  Save,
+  Building,
+  Palette,
+  MapPin,
+  Mail,
+  Phone,
+  ShieldCheck,
+  Check,
+} from 'lucide-react';
 import tenantService from '../../services/tenant.service';
 import toast from 'react-hot-toast';
 
@@ -39,8 +45,8 @@ const BusinessProfile = () => {
             state: t.state,
             country: t.country,
             gstNumber: t.gstNumber,
-            primaryColor: t.primaryColor || '#dc2626',
-            secondaryColor: t.secondaryColor || '#991b1b',
+            primaryColor: t.primaryColor || '#386b58',
+            secondaryColor: t.secondaryColor || '#8b5cf6',
             welcomeMessage: t.welcomeMessage,
             description: t.description,
             logo: t.logo,
@@ -61,7 +67,7 @@ const BusinessProfile = () => {
     try {
       const values = await form.validateFields();
       await tenantService.updateMyTenantProfile(values);
-      toast.success('Branding & Business Settings updated successfully!');
+      toast.success('Property settings and branding updated');
     } catch {
       toast.error('Failed to save settings');
     } finally {
@@ -71,111 +77,128 @@ const BusinessProfile = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            Business Profile & White-Label Branding
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            Property Branding & White-Label Config
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Customize your brand identity, colors, logo, and digital menu appearance for customers
+          <Text className="text-slate-500 text-xs block">
+            Configure hotel/restaurant identity, contact information, GST registration, and customer menu colorways
           </Text>
         </div>
         <Button
           type="primary"
-          icon={<SaveOutlined />}
+          icon={<Save size={14} strokeWidth={2} />}
           loading={saving}
           onClick={handleSave}
-          className="rounded-xl font-bold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
-          Save All Changes
+          Save Changes
         </Button>
       </div>
 
-      <Form form={form} layout="vertical" requiredMark={false} size="large">
-        {/* Core Info */}
-        <Card title={<span className="font-bold text-slate-800 text-sm">Restaurant Profile</span>} className="rounded-2xl shadow-sm border border-slate-100 mb-6">
+      <Form form={form} layout="vertical" requiredMark={false}>
+        {/* Core Profile */}
+        <Card
+          title={
+            <div className="flex items-center gap-2 py-1 text-slate-900 font-semibold text-xs uppercase tracking-wider">
+              <Building size={15} strokeWidth={2} className="text-slate-500" />
+              <span>Core Business Profile</span>
+            </div>
+          }
+          className="rounded-xl shadow-xs border border-slate-200/80 bg-white mb-6"
+        >
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item name="name" label="Business Display Name" rules={[{ required: true }]}>
-                <Input placeholder="Royal Palace Restaurant" className="rounded-xl" />
+              <Form.Item name="name" label={<span className="text-xs font-medium text-slate-700">Business Display Name</span>} rules={[{ required: true }]}>
+                <Input placeholder="e.g. Royal Palace Restaurant" className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="email" label="Contact Email" rules={[{ required: true, type: 'email' }]}>
-                <Input placeholder="owner@royalpalace.com" className="rounded-xl" />
+              <Form.Item name="email" label={<span className="text-xs font-medium text-slate-700">Public Contact Email</span>} rules={[{ type: 'email' }]}>
+                <Input placeholder="contact@royalpalace.com" className="rounded-lg text-xs font-mono" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="phone" label="Phone Number">
-                <Input placeholder="+91 98765 43210" className="rounded-xl" />
+              <Form.Item name="phone" label={<span className="text-xs font-medium text-slate-700">Phone Number</span>}>
+                <Input placeholder="+91 98765 43210" className="rounded-lg text-xs font-mono" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="gstNumber" label="GST / Tax Identification">
-                <Input placeholder="07AAAAA0000A1Z5" className="rounded-xl uppercase font-mono" />
+              <Form.Item name="gstNumber" label={<span className="text-xs font-medium text-slate-700">GST Registration Number</span>}>
+                <Input placeholder="07AAAAA0000A1Z5" className="rounded-lg text-xs font-mono uppercase" />
+              </Form.Item>
+            </Col>
+            <Col xs={24}>
+              <Form.Item name="address" label={<span className="text-xs font-medium text-slate-700">Physical Address</span>}>
+                <Input placeholder="Plot 12, Civil Lines, Near City Palace" className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="city" label="City">
-                <Input placeholder="New Delhi" className="rounded-xl" />
+              <Form.Item name="city" label={<span className="text-xs font-medium text-slate-700">City</span>}>
+                <Input placeholder="Jaipur" className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="state" label="State">
-                <Input placeholder="Delhi" className="rounded-xl" />
+              <Form.Item name="state" label={<span className="text-xs font-medium text-slate-700">State</span>}>
+                <Input placeholder="Rajasthan" className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="country" label="Country" initialValue="India">
-                <Input className="rounded-xl" />
+              <Form.Item name="country" label={<span className="text-xs font-medium text-slate-700">Country</span>} initialValue="India">
+                <Input className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
-            <Col span={24}>
-              <Form.Item name="address" label="Physical Address">
-                <Input.TextArea rows={2} placeholder="123 MG Road, Connaught Place" className="rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item name="description" label="Restaurant Tagline / Description">
-                <Input.TextArea rows={2} placeholder="Authentic Indian royal dining & sizzler bar" className="rounded-xl" />
+            <Col xs={24}>
+              <Form.Item name="description" label={<span className="text-xs font-medium text-slate-700">Property Description</span>}>
+                <Input.TextArea rows={2} placeholder="Fine dining experience featuring traditional and modern fusion delicacies..." className="rounded-lg text-xs" />
               </Form.Item>
             </Col>
           </Row>
         </Card>
 
-        {/* Dynamic Brand Customization */}
-        <Card title={<span className="font-bold text-slate-800 text-sm">Brand Colors & Visual Identity</span>} className="rounded-2xl shadow-sm border border-slate-100 mb-6">
+        {/* Branding & Theme */}
+        <Card
+          title={
+            <div className="flex items-center gap-2 py-1 text-slate-900 font-semibold text-xs uppercase tracking-wider">
+              <Palette size={15} strokeWidth={2} className="text-slate-500" />
+              <span>Digital Menu White-Label Customization</span>
+            </div>
+          }
+          className="rounded-xl shadow-xs border border-slate-200/80 bg-white"
+        >
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item name="primaryColor" label="Primary Accent Color">
-                <div className="flex items-center gap-3">
-                  <Input type="color" className="w-16 h-12 p-1 rounded-xl cursor-pointer" />
-                  <Input placeholder="#dc2626" className="rounded-xl font-mono" />
+              <Form.Item name="welcomeMessage" label={<span className="text-xs font-medium text-slate-700">Guest Welcome Greeting</span>}>
+                <Input placeholder="Welcome! Scan to place your table order." className="rounded-lg text-xs" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item name="primaryColor" label={<span className="text-xs font-medium text-slate-700">Brand Primary Color</span>}>
+                <div className="flex items-center gap-2">
+                  <Input type="color" className="w-12 h-9 p-0.5 rounded cursor-pointer" />
+                  <Input placeholder="#386b58" className="rounded-lg text-xs font-mono" />
+                </div>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={6}>
+              <Form.Item name="secondaryColor" label={<span className="text-xs font-medium text-slate-700">Accent Tone</span>}>
+                <div className="flex items-center gap-2">
+                  <Input type="color" className="w-12 h-9 p-0.5 rounded cursor-pointer" />
+                  <Input placeholder="#8b5cf6" className="rounded-lg text-xs font-mono" />
                 </div>
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="secondaryColor" label="Secondary Brand Color">
-                <div className="flex items-center gap-3">
-                  <Input type="color" className="w-16 h-12 p-1 rounded-xl cursor-pointer" />
-                  <Input placeholder="#991b1b" className="rounded-xl font-mono" />
-                </div>
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item name="welcomeMessage" label="Guest Digital Welcome Message">
-                <Input.TextArea rows={2} placeholder="Welcome to Royal Palace! Scan, Browse & Order." className="rounded-xl" />
+              <Form.Item name="logo" label={<span className="text-xs font-medium text-slate-700">Brand Logo URL</span>}>
+                <Input placeholder="https://cdn.example.com/logo.png" className="rounded-lg text-xs font-mono" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item name="logo" label="Logo Image URL">
-                <Input placeholder="https://example.com/logo.png" className="rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="coverImage" label="Header Cover Banner Image URL">
-                <Input placeholder="https://example.com/cover.jpg" className="rounded-xl" />
+              <Form.Item name="coverImage" label={<span className="text-xs font-medium text-slate-700">Header Cover Banner URL</span>}>
+                <Input placeholder="https://cdn.example.com/banner.jpg" className="rounded-lg text-xs font-mono" />
               </Form.Item>
             </Col>
           </Row>

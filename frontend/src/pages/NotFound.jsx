@@ -14,7 +14,7 @@ const NotFound = () => {
             type="primary"
             onClick={() => navigate('/login')}
             className="rounded-xl font-bold"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
           >
             Go to Platform Home
           </Button>

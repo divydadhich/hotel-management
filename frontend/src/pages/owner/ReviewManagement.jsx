@@ -11,9 +11,16 @@ import {
   Input,
   Tag,
 } from 'antd';
-import { StarFilled, MessageOutlined } from '@ant-design/icons';
+import {
+  Star,
+  MessageSquare,
+  CornerDownRight,
+  Send,
+  MessageCircle,
+} from 'lucide-react';
 import tenantService from '../../services/tenant.service';
 import { formatDateTime } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -61,32 +68,39 @@ const ReviewManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-        <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-          Guest Feedback & Reputation
-        </Title>
-        <Text className="text-slate-500 text-xs mt-0.5 block">
-          Analyze customer ratings, food satisfaction, and respond directly to guest reviews
-        </Text>
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div>
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            Guest Feedback & Reputation
+          </Title>
+          <Text className="text-slate-500 text-xs block">
+            Monitor customer ratings, dish quality reviews, and post official responses
+          </Text>
+        </div>
       </div>
 
       {/* Rating Scorecard */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
-          <Card className="rounded-2xl shadow-sm border border-slate-100 text-center py-4 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
-            <h1 className="text-5xl font-black text-amber-500 mb-2">
+          <Card className="rounded-xl shadow-xs border border-slate-200/80 text-center py-4 bg-slate-50/60">
+            <h1 className="text-4xl font-bold font-mono text-slate-900 mb-1">
               {summary?.avgRating ? summary.avgRating.toFixed(1) : '5.0'}
             </h1>
-            <Rate disabled allowHalf value={summary?.avgRating || 5} className="text-amber-400 text-lg mb-2" />
-            <p className="text-slate-500 text-xs font-semibold">
-              Based on {summary?.totalReviews || reviews.length} verified dining experiences
+            <div className="flex justify-center mb-2">
+              <Rate disabled allowHalf value={summary?.avgRating || 5} className="text-amber-500 text-base" />
+            </div>
+            <p className="text-slate-500 text-xs">
+              Based on {summary?.totalReviews || reviews.length} verified guest dining sessions
             </p>
           </Card>
         </Col>
 
         <Col xs={24} md={16}>
-          <Card className="rounded-2xl shadow-sm border border-slate-100">
-            <h4 className="font-bold text-slate-800 text-sm mb-4">Rating Breakdown</h4>
+          <Card className="rounded-xl shadow-xs border border-slate-200/80 bg-white">
+            <h4 className="font-semibold text-slate-900 text-xs mb-3 uppercase tracking-wider">
+              Rating Distribution
+            </h4>
             <div className="space-y-2 text-xs">
               {[5, 4, 3, 2, 1].map((stars) => {
                 const count =
@@ -99,15 +113,19 @@ const ReviewManagement = () => {
                     : stars === 2
                     ? summary?.twoStar || 0
                     : summary?.oneStar || 0;
-                const total = summary?.totalReviews || 1;
+                const total = summary?.totalReviews || reviews.length || 1;
                 const pct = Math.round((count / total) * 100);
+
                 return (
                   <div key={stars} className="flex items-center gap-3">
-                    <span className="w-12 text-slate-600 font-semibold">{stars} Stars</span>
-                    <div className="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-amber-400 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <span className="w-12 text-slate-500 text-[11px] font-mono flex items-center gap-1">
+                      <span>{stars}</span>
+                      <Star size={11} className="text-amber-500 fill-amber-500" />
+                    </span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="w-8 text-right text-slate-400 text-[11px]">{count}</span>
+                    <span className="w-10 text-right text-slate-400 text-[11px] font-mono">{count}</span>
                   </div>
                 );
               })}
@@ -116,55 +134,77 @@ const ReviewManagement = () => {
         </Col>
       </Row>
 
-      {/* Review List */}
+      {/* Review Feed */}
       <Card
-        title={<span className="font-bold text-slate-800 text-sm">Customer Reviews</span>}
-        className="rounded-2xl shadow-sm border border-slate-100"
+        title={<span className="font-semibold text-slate-900 text-sm">Verified Guest Reviews ({reviews.length})</span>}
+        className="rounded-xl shadow-xs border border-slate-200/80 bg-white"
       >
         <List
-          loading={loading}
           dataSource={reviews}
-          renderItem={(rev) => (
-            <List.Item className="!py-4">
+          loading={loading}
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="No guest reviews yet"
+                description="Guests who complete table orders can rate dishes and leave feedback on their order confirmation screen."
+                icon={MessageSquare}
+              />
+            ),
+          }}
+          renderItem={(item) => (
+            <List.Item className="!py-4 border-b border-slate-100 last:border-b-0">
               <div className="w-full space-y-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="font-bold text-slate-800 text-sm">{rev.customerName || 'Guest'}</span>
-                    <span className="text-slate-400 text-xs ml-3">{formatDateTime(rev.createdAt)}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-900 text-xs">
+                      {item.customerName || 'Verified Guest'}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <Rate disabled value={item.overallRating} className="text-amber-500 text-xs" />
                   </div>
-                  <Rate disabled value={rev.overallRating} className="text-amber-400 text-sm" />
+                  <span className="text-slate-400 text-[11px]">{formatDateTime(item.createdAt)}</span>
                 </div>
 
-                <div className="flex gap-4 text-xs text-slate-500">
-                  {rev.foodRating && <span>Food: <strong>{rev.foodRating}/5</strong></span>}
-                  {rev.serviceRating && <span>Service: <strong>{rev.serviceRating}/5</strong></span>}
+                {item.comment && (
+                  <p className="text-slate-700 text-xs leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    "{item.comment}"
+                  </p>
+                )}
+
+                {/* Sub ratings */}
+                <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 pt-1">
+                  <span>Food Quality: <strong className="text-slate-800">{item.foodRating || 5}/5</strong></span>
+                  <span>Service: <strong className="text-slate-800">{item.serviceRating || 5}/5</strong></span>
+                  {item.orderNumber && (
+                    <span className="font-mono text-slate-400">Order: #{item.orderNumber}</span>
+                  )}
                 </div>
 
-                <p className="text-slate-700 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  "{rev.comment || 'No written comment.'}"
-                </p>
-
-                {rev.ownerReply ? (
-                  <div className="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100/60 text-xs ml-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Tag color="indigo" className="text-[10px] font-bold">RESTAURANT RESPONSE</Tag>
-                      <span className="text-slate-400 text-[11px]">{formatDateTime(rev.ownerRepliedAt)}</span>
+                {/* Owner Reply */}
+                {item.response ? (
+                  <div className="mt-2.5 pl-3 border-l-2 border-emerald-700 py-1 bg-emerald-50/50 rounded-r-lg p-2.5">
+                    <div className="flex items-center gap-1.5 text-emerald-800 font-semibold text-[11px] mb-0.5">
+                      <CornerDownRight size={13} strokeWidth={2.5} />
+                      <span>Response from Management</span>
                     </div>
-                    <p className="text-slate-800">{rev.ownerReply}</p>
+                    <p className="text-slate-700 text-xs">{item.response.message}</p>
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Replied on {formatDateTime(item.response.respondedAt)}
+                    </span>
                   </div>
                 ) : (
-                  <div className="flex justify-end pt-1">
+                  <div className="pt-1">
                     <Button
                       size="small"
-                      icon={<MessageOutlined />}
+                      icon={<MessageSquare size={12} strokeWidth={2} />}
                       onClick={() => {
-                        setSelectedReview(rev);
+                        setSelectedReview(item);
                         setReplyText('');
                         setReplyModalOpen(true);
                       }}
-                      className="rounded-lg text-xs"
+                      className="rounded-md text-[11px] border-slate-200 text-slate-600"
                     >
-                      Respond to Review
+                      Post Official Reply
                     </Button>
                   </div>
                 )}
@@ -176,22 +216,25 @@ const ReviewManagement = () => {
 
       {/* Reply Modal */}
       <Modal
-        title={`Reply to ${selectedReview?.customerName || 'Guest'}`}
+        title={<span className="font-semibold text-slate-900 text-sm">Respond to Guest Feedback</span>}
         open={replyModalOpen}
         onCancel={() => setReplyModalOpen(false)}
         onOk={handlePostReply}
         okText="Publish Response"
+        okButtonProps={{ style: { backgroundColor: '#386b58', borderColor: '#386b58' }, className: 'rounded-lg text-xs font-medium' }}
+        cancelButtonProps={{ className: 'rounded-lg text-xs' }}
+        width={480}
       >
-        <div className="space-y-3 mt-4">
-          <p className="text-xs text-slate-500 italic bg-slate-50 p-3 rounded-xl">
-            "{selectedReview?.comment}"
+        <div className="mt-3 space-y-3">
+          <p className="text-xs text-slate-500">
+            Your reply will be displayed publicly under the guest's review on their feedback screen.
           </p>
           <Input.TextArea
             rows={4}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Thank you so much for dining with us! We are thrilled you enjoyed the food..."
-            className="rounded-xl"
+            placeholder="Thank you for dining with us! We are thrilled you enjoyed the food..."
+            className="rounded-lg text-xs"
           />
         </div>
       </Modal>

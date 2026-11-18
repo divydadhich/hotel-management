@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -8,19 +9,25 @@ const { Content } = Layout;
 
 const DashboardLayout = () => {
   const { sidebarCollapsed } = useSelector((state) => state.ui);
-  const sidebarWidth = sidebarCollapsed ? 80 : 250;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const sidebarWidth = sidebarCollapsed ? 76 : 250;
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <Sidebar collapsed={sidebarCollapsed} />
-      <Layout style={{ marginLeft: sidebarWidth, transition: 'margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1)', background: '#f8fafc' }}>
-        <Navbar />
-        <Content
-          style={{
-            margin: '24px',
-            minHeight: 'calc(100vh - 64px - 48px)',
-          }}
-        >
+    <Layout className="dashboard-layout">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        mobileOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
+      <Layout
+        className="dashboard-main-layout"
+        style={{
+          marginLeft: sidebarWidth,
+          transition: 'margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <Navbar onMenuClick={() => setMobileMenuOpen(true)} />
+        <Content className="dashboard-content" style={{ margin: 24, minHeight: 'calc(100vh - 112px)' }}>
           <Outlet />
         </Content>
       </Layout>

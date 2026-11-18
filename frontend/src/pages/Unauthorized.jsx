@@ -18,7 +18,7 @@ const Unauthorized = () => {
             type="primary"
             onClick={() => navigate(user?.role ? ROLE_DASHBOARD_ROUTES[user.role] : '/login')}
             className="rounded-xl font-bold"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
           >
             Return to My Workspace
           </Button>

@@ -1,28 +1,35 @@
-import { Empty, Button } from 'antd';
+import { Inbox, Plus } from 'lucide-react';
+import { Button } from 'antd';
 
-const EmptyState = ({ title = 'No records found', description, action, actionText = 'Create New' }) => (
-  <div className="flex flex-col items-center justify-center py-16 px-4">
-    <Empty
-      image={Empty.PRESENTED_IMAGE_SIMPLE}
-      description={
-        <div className="text-center mt-2">
-          <p className="text-slate-700 font-semibold text-base">{title}</p>
-          {description && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{description}</p>}
-        </div>
-      }
-    >
+const EmptyState = ({
+  title = 'No records found',
+  description = 'Get started by creating your first record in this view.',
+  action,
+  actionText = 'Create New',
+  icon: CustomIcon,
+}) => {
+  const IconComponent = CustomIcon || Inbox;
+
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center max-w-sm mx-auto">
+      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400 mb-3.5 shadow-2xs">
+        <IconComponent size={22} strokeWidth={1.75} />
+      </div>
+      <h3 className="text-slate-800 font-semibold text-sm mb-1">{title}</h3>
+      {description && <p className="text-slate-500 text-xs leading-relaxed mb-4">{description}</p>}
       {action && (
         <Button
           type="primary"
           onClick={action}
-          className="mt-4 rounded-xl font-medium"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          icon={<Plus size={14} strokeWidth={2.5} />}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
           {actionText}
         </Button>
       )}
-    </Empty>
-  </div>
-);
+    </div>
+  );
+};
 
 export default EmptyState;

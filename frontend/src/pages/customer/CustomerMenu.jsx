@@ -24,6 +24,7 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   StarFilled,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import tenantService from '../../services/tenant.service';
 import useSocket from '../../hooks/useSocket';
@@ -106,7 +107,7 @@ const CustomerMenu = () => {
     const cleanupStatus = onEvent('order:status_changed', ({ orderId, status, order }) => {
       if (orderId === activeOrder._id) {
         setActiveOrder((prev) => ({ ...prev, status, ...(order || {}) }));
-        toast(`Order Status: ${status.toUpperCase()}`, { icon: '🛎️' });
+        toast(`Order status: ${status.toUpperCase()}`);
         if (status === 'served' || status === 'completed') {
           // Trigger review prompt
           setReviewModalOpen(true);
@@ -237,7 +238,7 @@ const CustomerMenu = () => {
               name: customerName,
               contact: customerPhone,
             },
-            theme: { color: tenant.primaryColor || '#6366f1' },
+            theme: { color: tenant.primaryColor || '#386b58' },
           };
 
           const rzp = new window.Razorpay(options);
@@ -291,7 +292,7 @@ const CustomerMenu = () => {
       <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
         <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm text-center border border-slate-100">
           <div className="w-16 h-16 bg-rose-50 text-rose-500 text-3xl rounded-2xl flex items-center justify-center mx-auto mb-4">
-            ⚠️
+            <ExclamationCircleOutlined />
           </div>
           <h2 className="text-xl font-black text-slate-900 mb-2">Notice</h2>
           <p className="text-slate-500 text-xs leading-relaxed mb-6">{error}</p>
@@ -299,7 +300,7 @@ const CustomerMenu = () => {
             type="primary"
             onClick={() => window.location.reload()}
             className="rounded-xl w-full font-bold"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
           >
             Retry Loading
           </Button>
@@ -322,28 +323,27 @@ const CustomerMenu = () => {
     );
   }
 
-  const primaryColor = tenant?.primaryColor || '#6366f1';
+  const primaryColor = tenant?.primaryColor || '#386b58';
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-slate-50 pb-28 relative shadow-2xl">
       {/* Restaurant Header */}
       <div
-        className="relative text-white p-6 pt-10 rounded-b-3xl shadow-lg"
-        style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, #1e1b4b 100%)` }}
+        className="relative border-b border-slate-200 bg-white p-6 pt-10 text-slate-800"
       >
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/80">Open For Dine-In</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Open for dine-in</span>
             </div>
-            <h1 className="text-2xl font-black text-white leading-tight">{tenant?.name}</h1>
-            <p className="text-white/80 text-xs mt-1 max-w-xs">{tenant?.welcomeMessage}</p>
+            <h1 className="text-2xl font-semibold text-slate-900 leading-tight">{tenant?.name}</h1>
+            <p className="text-slate-500 text-xs mt-1 max-w-xs">{tenant?.welcomeMessage}</p>
           </div>
           {table && (
-            <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/30 text-center flex-shrink-0">
-              <span className="text-[10px] uppercase font-bold text-white/80 block">Table</span>
-              <span className="text-lg font-black text-white leading-tight">{table.number}</span>
+            <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 text-center flex-shrink-0">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block">Table</span>
+              <span className="text-lg font-semibold text-slate-800 leading-tight">{table.number}</span>
             </div>
           )}
         </div>
@@ -427,7 +427,7 @@ const CustomerMenu = () => {
 
                   {item.isBestseller && (
                     <Tag color="gold" className="text-[10px] font-bold rounded-md mb-1.5">
-                      ⭐ Bestseller
+                      Bestseller
                     </Tag>
                   )}
 
@@ -680,13 +680,13 @@ const CustomerMenu = () => {
               <span className="text-xs uppercase font-bold text-slate-400">Current Progress</span>
               <h2 className="text-2xl font-black text-slate-900 capitalize mt-1">
                 {activeOrder.status === 'pending'
-                  ? 'Sent to Kitchen 🛎️'
+                  ? 'Sent to the kitchen'
                   : activeOrder.status === 'preparing'
-                  ? 'Currently Cooking on Stove 🔥'
+                  ? 'Being prepared'
                   : activeOrder.status === 'ready'
-                  ? 'Dish is Ready on Pass! 🍽️'
+                  ? 'Ready to serve'
                   : activeOrder.status === 'served'
-                  ? 'Served at Your Table! Enjoy 😋'
+                  ? 'Served at your table'
                   : activeOrder.status}
               </h2>
             </div>

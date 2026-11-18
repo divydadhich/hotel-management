@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Space, Tag, Input, Select, Typography, Popconfirm, Card } from 'antd';
 import {
-  PlusOutlined,
-  SearchOutlined,
-  StopOutlined,
-  CheckOutlined,
-  LinkOutlined,
-} from '@ant-design/icons';
+  Plus,
+  Search,
+  ExternalLink,
+  Building2,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTenants, toggleTenantStatus } from '../../store/slices/tenantSlice';
 import { formatDate } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -48,12 +50,12 @@ const TenantList = () => {
 
   const columns = [
     {
-      title: 'Business Info',
+      title: 'Business Identity',
       dataIndex: 'name',
       key: 'name',
       render: (text, r) => (
         <div>
-          <span className="font-bold text-slate-800 text-sm block">{text}</span>
+          <span className="font-semibold text-slate-900 text-xs block">{text}</span>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-[11px] text-slate-400 capitalize">{r.businessType || 'Restaurant'}</span>
             <span className="text-slate-300">•</span>
@@ -61,10 +63,10 @@ const TenantList = () => {
               href={`/menu/${r.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="text-indigo-600 text-[11px] font-mono hover:underline flex items-center gap-1"
+              className="text-emerald-800 text-[11px] font-mono hover:underline flex items-center gap-1"
             >
               <span>/menu/{r.slug}</span>
-              <LinkOutlined className="text-[10px]" />
+              <ExternalLink size={10} strokeWidth={2} />
             </a>
           </div>
         </div>
@@ -76,13 +78,13 @@ const TenantList = () => {
       key: 'email',
       render: (email, r) => (
         <div>
-          <div className="text-xs text-slate-700">{email || '-'}</div>
-          <div className="text-[11px] text-slate-400">{r.phone || '-'}</div>
+          <div className="text-xs text-slate-800 font-mono">{email || '-'}</div>
+          <div className="text-[11px] text-slate-400 font-mono">{r.phone || '-'}</div>
         </div>
       ),
     },
     {
-      title: 'Location',
+      title: 'City / Region',
       dataIndex: 'city',
       key: 'city',
       render: (city, r) => (
@@ -92,60 +94,55 @@ const TenantList = () => {
       ),
     },
     {
-      title: 'Status',
+      title: 'Operating State',
       key: 'status',
       render: (_, r) => (
-        <Space direction="vertical" size={2}>
-          <Tag color={r.isActive ? 'green' : 'default'} className="rounded-md font-medium text-xs">
+        <div className="space-y-1">
+          <Tag color={r.isActive ? 'success' : 'default'} className="rounded text-[10px] uppercase font-semibold">
             {r.isActive ? 'Active' : 'Inactive'}
           </Tag>
           {r.isSuspended && (
-            <Tag color="red" className="rounded-md font-medium text-xs">
+            <Tag color="error" className="rounded text-[10px] uppercase font-semibold">
               Suspended
             </Tag>
           )}
-        </Space>
+        </div>
       ),
     },
     {
-      title: 'Onboarded',
+      title: 'Created Date',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (d) => <span className="text-xs text-slate-500">{formatDate(d)}</span>,
+      render: (d) => <span className="text-slate-500 text-xs">{formatDate(d)}</span>,
     },
     {
-      title: 'Admin Actions',
+      title: 'Platform Actions',
       key: 'actions',
-      render: (_, record) => (
+      align: 'right',
+      render: (_, r) => (
         <Space size="small">
-          <Popconfirm
-            title={`${record.isActive ? 'Deactivate' : 'Activate'} business operations?`}
-            onConfirm={() => handleStatusToggle(record)}
-            okText="Yes"
-            cancelText="No"
+          <Button
+            size="small"
+            onClick={() => handleStatusToggle(r)}
+            className="rounded text-xs"
           >
-            <Button
-              size="small"
-              className="rounded-lg text-xs"
-              danger={record.isActive}
-              icon={record.isActive ? <StopOutlined /> : <CheckOutlined />}
-            >
-              {record.isActive ? 'Deactivate' : 'Activate'}
-            </Button>
-          </Popconfirm>
+            {r.isActive ? 'Deactivate' : 'Activate'}
+          </Button>
 
           <Popconfirm
-            title={`${record.isSuspended ? 'Lift suspension for' : 'Suspend'} this business?`}
-            onConfirm={() => handleSuspendToggle(record)}
-            okText="Yes"
-            cancelText="No"
+            title={r.isSuspended ? 'Lift business suspension?' : 'Suspend this business?'}
+            description="Suspended tenants and their customers cannot access menus or place orders."
+            onConfirm={() => handleSuspendToggle(r)}
+            okText={r.isSuspended ? 'Unsuspend' : 'Suspend'}
+            cancelText="Cancel"
+            okButtonProps={{ danger: !r.isSuspended }}
           >
             <Button
               size="small"
-              danger={!record.isSuspended}
-              className="rounded-lg text-xs"
+              danger={!r.isSuspended}
+              className="rounded text-xs"
             >
-              {record.isSuspended ? 'Unsuspend' : 'Suspend'}
+              {r.isSuspended ? 'Unsuspend' : 'Suspend'}
             </Button>
           </Popconfirm>
         </Space>
@@ -155,45 +152,47 @@ const TenantList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            Registered Businesses
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            Registered Tenant Fleet
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            {pagination?.total || 0} independent restaurants and hotels active on this SaaS platform
+          <Text className="text-slate-500 text-xs block">
+            Monitor, inspect, activate, and manage business accounts across the platform
           </Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus size={14} strokeWidth={2} />}
           onClick={() => navigate('/super/tenants/new')}
-          className="rounded-xl font-semibold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
-          Add New Business
+          Provision Business
         </Button>
       </div>
 
-      <Card className="rounded-2xl shadow-sm border border-slate-100">
+      <Card className="rounded-xl shadow-xs border border-slate-200/80 bg-white">
+        {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-5">
           <Input
-            placeholder="Search business name, slug or email..."
-            prefix={<SearchOutlined className="text-slate-400" />}
-            className="rounded-xl"
+            placeholder="Search businesses by name, slug or email..."
+            prefix={<Search size={14} strokeWidth={2} className="text-slate-400 mr-1" />}
+            className="rounded-lg text-xs"
             style={{ width: 320 }}
             allowClear
             onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
           />
           <Select
-            placeholder="Filter by Status"
+            placeholder="Filter by State"
             allowClear
-            className="rounded-xl"
-            style={{ width: 170 }}
+            className="rounded-lg text-xs"
+            style={{ width: 160 }}
             onChange={(val) => setFilters((f) => ({ ...f, isActive: val, page: 1 }))}
           >
-            <Option value="true">Active Only</Option>
-            <Option value="false">Inactive Only</Option>
+            <Option value={true}>Active Only</Option>
+            <Option value={false}>Inactive Only</Option>
           </Select>
         </div>
 
@@ -203,13 +202,24 @@ const TenantList = () => {
           rowKey="_id"
           loading={isLoading}
           pagination={{
-            current: pagination?.page || 1,
-            pageSize: pagination?.limit || 10,
-            total: pagination?.total || 0,
-            showSizeChanger: true,
-            onChange: (page, limit) => setFilters((f) => ({ ...f, page, limit })),
+            current: pagination.page,
+            pageSize: pagination.limit,
+            total: pagination.total,
+            onChange: (page) => setFilters((f) => ({ ...f, page })),
+            showSizeChanger: false,
           }}
           size="middle"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="No tenants found"
+                description="Try clearing search filters or provision a new restaurant/hotel account."
+                action={() => navigate('/super/tenants/new')}
+                actionText="Provision Business"
+                icon={Building2}
+              />
+            ),
+          }}
         />
       </Card>
     </div>

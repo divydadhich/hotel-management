@@ -1,6 +1,16 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Alert } from 'antd';
-import { MailOutlined, LockOutlined, EyeInvisibleOutlined, EyeTwoTone, ArrowRightOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Typography, Alert, Divider } from 'antd';
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  QrCode,
+  Building2,
+  Users,
+  ChefHat,
+  ConciergeBell,
+  Sparkles,
+} from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { loginUser } from '../../store/slices/authSlice';
@@ -9,38 +19,44 @@ import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
 
+const demoAccounts = [
+  { title: 'Platform administrator', email: 'admin@platform.com', password: 'SuperAdmin@123', icon: <Building2 size={16} strokeWidth={2} /> },
+  { title: 'Restaurant owner', email: 'owner@royalpalace.com', password: 'Owner@123', icon: <Sparkles size={16} strokeWidth={2} /> },
+  { title: 'Reception & front desk', email: 'reception@royalpalace.com', password: 'Staff@123', icon: <ConciergeBell size={16} strokeWidth={2} /> },
+  { title: 'Kitchen display', email: 'kitchen@royalpalace.com', password: 'Staff@123', icon: <ChefHat size={16} strokeWidth={2} /> },
+];
+
 const Login = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoading, error } = useSelector((state) => state.auth);
-
   const from = location.state?.from?.pathname;
 
   const onFinish = async (values) => {
     const result = await dispatch(loginUser({ email: values.email, password: values.password }));
     if (loginUser.fulfilled.match(result)) {
       const { user } = result.payload;
-      toast.success(`Welcome back, ${user.name}!`);
-      const destination = from || ROLE_DASHBOARD_ROUTES[user.role] || '/dashboard';
-      navigate(destination, { replace: true });
+      toast.success(`Welcome back, ${user.name}`);
+      navigate(from || ROLE_DASHBOARD_ROUTES[user.role] || '/dashboard', { replace: true });
     }
   };
 
-  const fillCredentials = async (email, password) => {
+  const fillCredentials = async ({ email, password }) => {
     form.setFieldsValue({ email, password });
     await onFinish({ email, password });
   };
 
   return (
-    <Card className="shadow-2xl rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-xl p-2 sm:p-4 text-white">
-      <div className="text-center mb-6">
-        <Title level={3} className="!text-white !font-bold !mb-1">
-          Welcome to Workspace
+    <Card className="login-card">
+      <div className="login-intro">
+        <span className="login-eyebrow">ENTERPRISE HOSPITALITY SAAS</span>
+        <Title level={2} className="!mb-1.5 !mt-2 !text-slate-900 !font-bold !tracking-tight">
+          Sign In to Workspace
         </Title>
-        <Text className="text-slate-400 text-xs">
-          Sign in to your hospitality management console
+        <Text className="text-slate-500 text-xs">
+          Access your multi-tenant property management and dining console.
         </Text>
       </div>
 
@@ -49,7 +65,7 @@ const Login = () => {
           message={error}
           type="error"
           showIcon
-          className="mb-4 rounded-xl border-rose-500/20 bg-rose-500/10 text-rose-300"
+          className="mb-5 rounded-lg text-xs"
           closable
         />
       )}
@@ -57,83 +73,76 @@ const Login = () => {
       <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
         <Form.Item
           name="email"
-          label={<span className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Email or Role Username</span>}
-          rules={[
-            { required: true, message: 'Please enter your email or username (e.g. owner@royalpalace.com or owner)' },
-          ]}
+          label={<span className="text-xs font-semibold text-slate-700">Email or Username</span>}
+          rules={[{ required: true, message: 'Please enter your account email or role alias' }]}
         >
           <Input
-            prefix={<MailOutlined className="text-slate-500 mr-1" />}
-            placeholder="owner@royalpalace.com or owner"
-            className="rounded-xl bg-slate-800/80 border-slate-700 text-white placeholder-slate-500"
+            prefix={<Mail size={16} strokeWidth={2} className="text-slate-400 mr-1" />}
+            placeholder="e.g. owner@royalpalace.com or owner"
+            autoComplete="username"
+            className="rounded-lg text-xs"
           />
         </Form.Item>
 
         <Form.Item
           name="password"
-          label={<span className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Password</span>}
+          label={<span className="text-xs font-semibold text-slate-700">Password</span>}
           rules={[{ required: true, message: 'Please enter your password' }]}
         >
           <Input.Password
-            prefix={<LockOutlined className="text-slate-500 mr-1" />}
+            prefix={<Lock size={16} strokeWidth={2} className="text-slate-400 mr-1" />}
             placeholder="••••••••"
-            className="rounded-xl bg-slate-800/80 border-slate-700 text-white placeholder-slate-500"
-            iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined className="text-slate-400" />)}
+            autoComplete="current-password"
+            className="rounded-lg text-xs"
           />
         </Form.Item>
 
-        <Form.Item className="mt-6">
+        <Form.Item className="!mb-3 !mt-6">
           <Button
             type="primary"
             htmlType="submit"
             loading={isLoading}
-            className="w-full h-12 rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+            icon={<ArrowRight size={15} strokeWidth={2} />}
+            className="w-full !h-11 !rounded-lg !font-semibold text-xs shadow-xs"
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
           >
-            {isLoading ? 'Authenticating...' : <><span>Sign In to Dashboard</span><ArrowRightOutlined /></>}
+            {isLoading ? 'Authenticating...' : 'Sign In to Console'}
           </Button>
         </Form.Item>
       </Form>
 
-      {/* Demo Quick Logins */}
-      <div className="mt-4 pt-4 border-t border-slate-800">
-        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">
-          ⚡ One-Click Demo Logins
-        </p>
-        <div className="grid grid-cols-2 gap-2 text-xs">
+      <Button
+        block
+        icon={<QrCode size={15} strokeWidth={2} />}
+        className="!h-10 !rounded-lg !font-medium text-xs text-slate-600 border-slate-200 hover:text-slate-900"
+        onClick={() => navigate('/demo/customer')}
+      >
+        Preview Customer QR Menu
+      </Button>
+
+      <Divider className="!my-5">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          One-Click Demo Logins
+        </span>
+      </Divider>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {demoAccounts.map((account) => (
           <button
+            key={account.email}
             type="button"
-            onClick={() => fillCredentials('admin@platform.com', 'SuperAdmin@123')}
-            className="p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-left transition-colors"
+            onClick={() => fillCredentials(account)}
+            className="login-demo-option p-2.5 rounded-lg border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
           >
-            <div className="font-semibold text-indigo-400">Super Admin</div>
-            <div className="text-[10px] text-slate-400">admin@platform.com</div>
+            <div className="w-8 h-8 rounded-md bg-emerald-50 text-emerald-800 flex items-center justify-center flex-shrink-0">
+              {account.icon}
+            </div>
+            <div className="min-w-0">
+              <span className="block truncate text-xs font-semibold text-slate-800 leading-tight">{account.title}</span>
+              <span className="block truncate text-[10px] text-slate-400 font-mono">{account.email}</span>
+            </div>
           </button>
-          <button
-            type="button"
-            onClick={() => fillCredentials('owner@royalpalace.com', 'Owner@123')}
-            className="p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-left transition-colors"
-          >
-            <div className="font-semibold text-emerald-400">Restaurant Owner</div>
-            <div className="text-[10px] text-slate-400">owner@royalpalace.com</div>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillCredentials('reception@royalpalace.com', 'Staff@123')}
-            className="p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-left transition-colors"
-          >
-            <div className="font-semibold text-sky-400">Receptionist</div>
-            <div className="text-[10px] text-slate-400">reception@royalpalace.com</div>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillCredentials('kitchen@royalpalace.com', 'Staff@123')}
-            className="p-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-left transition-colors"
-          >
-            <div className="font-semibold text-amber-400">Kitchen Display</div>
-            <div className="text-[10px] text-slate-400">kitchen@royalpalace.com</div>
-          </button>
-        </div>
+        ))}
       </div>
     </Card>
   );

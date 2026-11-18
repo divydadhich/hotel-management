@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Row, Col, Card, Table, Tag, Button, Typography, Space } from 'antd';
 import {
-  ShopOutlined,
-  CheckCircleOutlined,
-  OrderedListOutlined,
-  UserOutlined,
-  PlusOutlined,
-  CrownOutlined,
-  ArrowRightOutlined,
-} from '@ant-design/icons';
+  Building2,
+  Crown,
+  Plus,
+  Users,
+  CheckCircle2,
+  ClipboardList,
+  ArrowRight,
+  TrendingUp,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/common/StatCard';
 import tenantService from '../../services/tenant.service';
 import { formatDate } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -32,7 +34,7 @@ const SuperAdminDashboard = () => {
         ]);
         setStats(statsRes.data);
         setTenants(tenantsRes.data || []);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load platform analytics');
       } finally {
         setLoading(false);
@@ -43,39 +45,42 @@ const SuperAdminDashboard = () => {
 
   const columns = [
     {
-      title: 'Business Name',
+      title: 'Business Identity',
       dataIndex: 'name',
       key: 'name',
       render: (text, r) => (
         <div>
-          <span className="font-bold text-slate-800 text-sm block">{text}</span>
-          <code className="text-[11px] text-slate-400 font-mono">/menu/{r.slug}</code>
+          <span className="font-semibold text-slate-900 text-xs block">{text}</span>
+          <code className="text-[10px] text-slate-400 font-mono">/menu/{r.slug}</code>
         </div>
       ),
     },
     {
-      title: 'Business Email',
+      title: 'Contact Email',
       dataIndex: 'email',
       key: 'email',
-      render: (e) => <span className="text-slate-600 text-xs">{e || '-'}</span>,
+      render: (e) => <span className="text-slate-600 text-xs font-mono">{e || '-'}</span>,
     },
     {
-      title: 'City / Region',
+      title: 'Location',
       dataIndex: 'city',
       key: 'city',
       render: (c, r) => <span className="text-slate-600 text-xs">{c ? `${c}, ${r.country || 'India'}` : '-'}</span>,
     },
     {
-      title: 'Status',
+      title: 'Subscription Status',
       key: 'status',
       render: (_, r) => (
-        <Tag color={r.isActive && !r.isSuspended ? 'green' : r.isSuspended ? 'red' : 'default'} className="rounded-md font-medium">
+        <Tag
+          color={r.isActive && !r.isSuspended ? 'success' : r.isSuspended ? 'error' : 'default'}
+          className="rounded text-[10px] uppercase font-semibold"
+        >
           {r.isSuspended ? 'Suspended' : r.isActive ? 'Active' : 'Inactive'}
         </Tag>
       ),
     },
     {
-      title: 'Created Date',
+      title: 'Onboarded Date',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (d) => <span className="text-slate-500 text-xs">{formatDate(d)}</span>,
@@ -84,92 +89,92 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            Platform Master Console
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            SaaS Platform Administration Console
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Monitor and administer all onboarded restaurants, hotels, subscriptions, and revenue
+          <Text className="text-slate-500 text-xs block">
+            Platform-wide multi-tenant fleet metrics, tenant lifecycle, and subscription management
           </Text>
         </div>
-        <Space>
+        <Space size="small">
           <Button
-            icon={<CrownOutlined />}
+            icon={<Crown size={14} strokeWidth={2} />}
             onClick={() => navigate('/super/plans')}
-            className="rounded-xl font-semibold"
+            className="rounded-lg font-medium text-xs h-9 px-3.5 border-slate-200 text-slate-700"
           >
             Manage Plans
           </Button>
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus size={14} strokeWidth={2} />}
             onClick={() => navigate('/super/tenants/new')}
-            className="rounded-xl font-semibold shadow-sm"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+            className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
           >
-            Onboard New Hotel
+            Provision Business
           </Button>
         </Space>
       </div>
 
-      {/* Stats */}
-      <Row gutter={[16, 16]}>
+      {/* Primary KPI Metrics */}
+      <Row gutter={[14, 14]}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Total Registered Businesses"
+            title="Registered Businesses"
             value={stats?.totalTenants ?? 0}
-            icon={<ShopOutlined />}
-            color="#6366f1"
-            loading={loading}
+            icon={<Building2 size={18} strokeWidth={2.2} />}
+            color="#386b58"
+            subtitle={`${stats?.activeTenants ?? 0} active subscriptions`}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Active Operations"
             value={stats?.activeTenants ?? 0}
-            icon={<CheckCircleOutlined />}
-            color="#10b981"
-            loading={loading}
+            icon={<CheckCircle2 size={18} strokeWidth={2.2} />}
+            color="#059669"
+            subtitle="Verified live tenants"
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Total Platform Orders"
+            title="Platform Guest Orders"
             value={stats?.totalOrders ?? 0}
-            icon={<OrderedListOutlined />}
-            color="#f59e0b"
-            loading={loading}
+            icon={<ClipboardList size={18} strokeWidth={2.2} />}
+            color="#d97706"
+            subtitle="Across all tenants"
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Active Platform Staff"
-            value={stats?.totalUsers ?? 0}
-            icon={<UserOutlined />}
-            color="#8b5cf6"
-            loading={loading}
+            title="Platform Dining Guests"
+            value={stats?.totalCustomers ?? 0}
+            icon={<Users size={18} strokeWidth={2.2} />}
+            color="#2563eb"
+            subtitle="Registered diners"
           />
         </Col>
       </Row>
 
-      {/* Recent Onboarded Businesses */}
+      {/* Onboarded Tenants Table */}
       <Card
         title={
-          <span className="font-bold text-slate-800 text-sm">Recently Onboarded Businesses</span>
+          <div className="flex items-center justify-between py-1">
+            <span className="font-semibold text-slate-900 text-sm">Recently Provisioned Businesses</span>
+            <Button
+              type="text"
+              onClick={() => navigate('/super/tenants')}
+              icon={<ArrowRight size={14} strokeWidth={2} />}
+              className="text-xs font-semibold text-emerald-800 flex items-center gap-1"
+            >
+              View All Tenants
+            </Button>
+          </div>
         }
-        className="rounded-2xl shadow-sm border border-slate-100"
-        extra={
-          <Button
-            type="link"
-            onClick={() => navigate('/super/tenants')}
-            className="text-xs font-semibold text-indigo-600 flex items-center gap-1"
-          >
-            <span>View All Businesses</span>
-            <ArrowRightOutlined />
-          </Button>
-        }
+        className="rounded-xl shadow-xs border border-slate-200/80 bg-white"
       >
         <Table
           dataSource={tenants}
@@ -178,6 +183,17 @@ const SuperAdminDashboard = () => {
           loading={loading}
           pagination={false}
           size="middle"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="No tenants onboarded yet"
+                description="Click 'Provision Business' to create the first hospitality tenant on the platform."
+                action={() => navigate('/super/tenants/new')}
+                actionText="Provision Business"
+                icon={Building2}
+              />
+            ),
+          }}
         />
       </Card>
     </div>

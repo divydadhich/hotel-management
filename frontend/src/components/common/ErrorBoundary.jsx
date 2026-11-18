@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
                 key="reload"
                 type="primary"
                 onClick={() => window.location.reload()}
-                style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+                style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
               >
                 Reload Window
               </Button>,

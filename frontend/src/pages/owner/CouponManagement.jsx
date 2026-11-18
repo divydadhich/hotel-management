@@ -13,9 +13,16 @@ import {
   Popconfirm,
   DatePicker,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, PercentageOutlined } from '@ant-design/icons';
+import {
+  Plus,
+  Trash2,
+  Percent,
+  Tag as TagIcon,
+  Calendar,
+} from 'lucide-react';
 import tenantService from '../../services/tenant.service';
 import { formatDate } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -51,7 +58,7 @@ const CouponManagement = () => {
         code: values.code.toUpperCase().trim(),
         validUntil: values.validUntil ? values.validUntil.toISOString() : null,
       });
-      toast.success(`Coupon ${values.code} created!`);
+      toast.success(`Coupon ${values.code} created`);
       setModalOpen(false);
       form.resetFields();
       loadCoupons();
@@ -75,13 +82,17 @@ const CouponManagement = () => {
       title: 'Coupon Code',
       dataIndex: 'code',
       key: 'code',
-      render: (code) => <Tag color="purple" className="font-mono font-bold text-sm px-2.5 py-0.5">{code}</Tag>,
+      render: (code) => (
+        <span className="font-mono font-bold text-xs bg-purple-50 text-purple-700 border border-purple-200/80 px-2.5 py-1 rounded inline-block">
+          {code}
+        </span>
+      ),
     },
     {
       title: 'Discount Value',
       key: 'discount',
       render: (_, r) => (
-        <span className="font-bold text-slate-800 text-xs">
+        <span className="font-semibold text-slate-900 text-xs font-mono">
           {r.discountType === 'percentage' ? `${r.discountValue}% OFF` : `₹${r.discountValue} Flat OFF`}
         </span>
       ),
@@ -90,26 +101,37 @@ const CouponManagement = () => {
       title: 'Min Order',
       dataIndex: 'minOrderAmount',
       key: 'minOrder',
-      render: (min) => <span className="text-slate-600 text-xs">{min > 0 ? `₹${min}` : 'No minimum'}</span>,
+      render: (min) => <span className="text-slate-600 text-xs font-mono">{min > 0 ? `₹${min}` : 'No minimum'}</span>,
     },
     {
-      title: 'Usage / Limit',
+      title: 'Redemption Count',
       key: 'usage',
       render: (_, r) => (
-        <span className="text-slate-600 text-xs">
-          {r.usedCount} used {r.usageLimit ? `/ ${r.usageLimit} max` : '(Unlimited)'}
+        <span className="text-slate-600 text-xs font-mono">
+          {r.usedCount} redemptions {r.usageLimit ? `/ ${r.usageLimit} max` : '(Unlimited)'}
         </span>
       ),
     },
     {
-      title: 'Expiration',
+      title: 'Valid Through',
       dataIndex: 'validUntil',
       key: 'validUntil',
-      render: (d) => <span className="text-slate-500 text-xs">{d ? formatDate(d) : 'Never expires'}</span>,
+      render: (vu) => <span className="text-slate-500 text-xs">{vu ? formatDate(vu) : 'Never expires'}</span>,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (act) => (
+        <Tag color={act ? 'success' : 'default'} className="rounded text-[10px] uppercase font-semibold">
+          {act ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
+      align: 'right',
       render: (_, r) => (
         <Popconfirm
           title="Delete this promotional coupon?"
@@ -118,7 +140,7 @@ const CouponManagement = () => {
           cancelText="Cancel"
           okButtonProps={{ danger: true }}
         >
-          <Button size="small" danger icon={<DeleteOutlined />} className="rounded-lg text-xs" />
+          <Button size="small" danger icon={<Trash2 size={13} strokeWidth={2} />} className="rounded" />
         </Popconfirm>
       ),
     },
@@ -126,30 +148,31 @@ const CouponManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
             Promotional Coupons & Discounts
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Run festival discounts, customer loyalty codes, and automated cart savings
+          <Text className="text-slate-500 text-xs block">
+            Configure percentage discounts, flat bill rebates, minimum cart requirements, and expiry limits
           </Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus size={14} strokeWidth={2} />}
           onClick={() => {
             form.resetFields();
             setModalOpen(true);
           }}
-          className="rounded-xl font-semibold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
           Create Coupon
         </Button>
       </div>
 
-      <Card className="rounded-2xl shadow-sm border border-slate-100">
+      <Card className="rounded-xl shadow-xs border border-slate-200/80 bg-white">
         <Table
           dataSource={coupons}
           columns={columns}
@@ -157,50 +180,82 @@ const CouponManagement = () => {
           loading={loading}
           pagination={false}
           size="middle"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="No active coupons"
+                description="Launch promotional campaigns by configuring discount codes for dining guests."
+                action={() => {
+                  form.resetFields();
+                  setModalOpen(true);
+                }}
+                actionText="Create Coupon"
+                icon={TagIcon}
+              />
+            ),
+          }}
         />
       </Card>
 
+      {/* Coupon Modal */}
       <Modal
-        title="Create Promotional Coupon"
+        title={<span className="font-semibold text-slate-900 text-sm">Create Promotional Coupon</span>}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleCreateCoupon}
-        okText="Create Promo Code"
+        okText="Publish Coupon"
+        okButtonProps={{ style: { backgroundColor: '#386b58', borderColor: '#386b58' }, className: 'rounded-lg text-xs font-medium' }}
+        cancelButtonProps={{ className: 'rounded-lg text-xs' }}
+        width={480}
       >
         <Form form={form} layout="vertical" className="mt-4" requiredMark={false}>
           <Form.Item
             name="code"
-            label="Coupon Code (e.g. WELCOME20)"
-            rules={[{ required: true }]}
+            label={<span className="text-xs font-medium text-slate-700">Coupon Promo Code</span>}
+            rules={[{ required: true, message: 'Please enter uppercase code (e.g. FESTIVE20)' }]}
           >
-            <Input placeholder="FESTIVAL15" className="rounded-xl font-mono uppercase" />
+            <Input placeholder="e.g. WELCOME10" className="uppercase font-mono rounded-lg text-xs" />
           </Form.Item>
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item
+              name="discountType"
+              label={<span className="text-xs font-medium text-slate-700">Discount Logic</span>}
+              initialValue="percentage"
+              rules={[{ required: true }]}
+            >
+              <Select className="rounded-lg text-xs">
+                <Option value="percentage">Percentage (%)</Option>
+                <Option value="fixed">Fixed Amount (₹)</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="discountValue"
+              label={<span className="text-xs font-medium text-slate-700">Discount Value</span>}
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={1} className="w-full rounded-lg text-xs" placeholder="e.g. 15" />
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item
+              name="minOrderAmount"
+              label={<span className="text-xs font-medium text-slate-700">Minimum Bill (₹)</span>}
+              initialValue={0}
+            >
+              <InputNumber min={0} className="w-full rounded-lg text-xs" placeholder="0 = No limit" />
+            </Form.Item>
+            <Form.Item
+              name="maxDiscountAmount"
+              label={<span className="text-xs font-medium text-slate-700">Cap Max Discount (₹)</span>}
+            >
+              <InputNumber min={1} className="w-full rounded-lg text-xs" placeholder="Optional cap" />
+            </Form.Item>
+          </div>
           <Form.Item
-            name="discountType"
-            label="Discount Type"
-            initialValue="percentage"
-            rules={[{ required: true }]}
+            name="validUntil"
+            label={<span className="text-xs font-medium text-slate-700">Expiry Date (Optional)</span>}
           >
-            <Select className="rounded-xl">
-              <Option value="percentage">Percentage Discount (%)</Option>
-              <Option value="fixed">Fixed Rupee Discount (₹)</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="discountValue"
-            label="Discount Amount / Percentage"
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1} className="w-full rounded-xl" placeholder="e.g. 15 for 15% or 100 for ₹100" />
-          </Form.Item>
-          <Form.Item name="minOrderAmount" label="Minimum Cart Value (₹)" initialValue={0}>
-            <InputNumber min={0} className="w-full rounded-xl" />
-          </Form.Item>
-          <Form.Item name="maxDiscount" label="Maximum Discount Cap (₹ - optional)">
-            <InputNumber min={1} className="w-full rounded-xl" />
-          </Form.Item>
-          <Form.Item name="usageLimit" label="Overall Usage Limit (optional)">
-            <InputNumber min={1} className="w-full rounded-xl" placeholder="Leave empty for unlimited" />
+            <DatePicker className="w-full rounded-lg text-xs" />
           </Form.Item>
         </Form>
       </Modal>

@@ -36,7 +36,7 @@ export const getStatusColor = (status) => {
     pending: '#f97316',
     accepted: '#3b82f6',
     rejected: '#ef4444',
-    preparing: '#8b5cf6',
+    preparing: '#668c71',
     ready: '#06b6d4',
     served: '#10b981',
     completed: '#10b981',

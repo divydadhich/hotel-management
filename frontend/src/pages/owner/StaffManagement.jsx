@@ -12,9 +12,18 @@ import {
   Card,
   Popconfirm,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  Plus,
+  Trash2,
+  Users,
+  ShieldCheck,
+  Mail,
+  Phone,
+  KeyRound,
+} from 'lucide-react';
 import tenantService from '../../services/tenant.service';
 import { formatDate } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -46,7 +55,7 @@ const StaffManagement = () => {
     try {
       const values = await form.validateFields();
       await tenantService.createStaff(values);
-      toast.success(`Staff account for ${values.name} created!`);
+      toast.success(`Staff account for ${values.name} provisioned`);
       setModalOpen(false);
       form.resetFields();
       loadStaff();
@@ -58,7 +67,7 @@ const StaffManagement = () => {
   const handleDeleteStaff = async (id) => {
     try {
       await tenantService.deleteStaff(id);
-      toast.success('Staff account removed');
+      toast.success('Staff account deactivated');
       loadStaff();
     } catch {
       toast.error('Failed to remove staff account');
@@ -67,60 +76,65 @@ const StaffManagement = () => {
 
   const columns = [
     {
-      title: 'Staff Member',
+      title: 'Employee Name & Email',
       dataIndex: 'name',
       key: 'name',
       render: (name, r) => (
         <div>
-          <span className="font-bold text-slate-800 text-sm block">{name}</span>
-          <span className="text-slate-400 text-xs">{r.email}</span>
+          <span className="font-semibold text-slate-900 text-xs block">{name}</span>
+          <span className="text-slate-400 text-[11px] font-mono">{r.email}</span>
         </div>
       ),
     },
     {
-      title: 'Assigned Role',
+      title: 'Department Role',
       dataIndex: 'role',
       key: 'role',
       render: (role) => (
-        <Tag color={role === 'kitchen' ? 'purple' : 'blue'} className="rounded-md capitalize text-xs">
-          {role === 'kitchen' ? '👨‍🍳 Kitchen Staff' : '🛎️ Receptionist / Cashier'}
+        <Tag
+          color={role === 'kitchen' ? 'purple' : 'blue'}
+          className="rounded text-[11px] font-medium capitalize"
+        >
+          {role === 'kitchen' ? 'Kitchen Display' : 'Front Desk / Cashier'}
         </Tag>
       ),
     },
     {
-      title: 'Mobile Phone',
+      title: 'Contact Phone',
       dataIndex: 'phone',
       key: 'phone',
-      render: (p) => <span className="text-slate-600 text-xs">{p || '-'}</span>,
+      render: (p) => <span className="text-slate-600 text-xs font-mono">{p || '-'}</span>,
     },
     {
-      title: 'Status',
+      title: 'Access State',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (act) => (
-        <Tag color={act ? 'green' : 'default'} className="rounded-md text-xs">
+        <Tag color={act ? 'success' : 'default'} className="rounded text-[10px] uppercase font-semibold">
           {act ? 'Active' : 'Deactivated'}
         </Tag>
       ),
     },
     {
-      title: 'Created Date',
+      title: 'Enrolled On',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (d) => <span className="text-slate-500 text-xs">{formatDate(d)}</span>,
     },
     {
-      title: 'Actions',
+      title: 'Action',
       key: 'actions',
+      align: 'right',
       render: (_, r) => (
         <Popconfirm
-          title="Remove this staff account?"
+          title="Deactivate this staff account?"
+          description="They will no longer be able to log in to their assigned portal."
           onConfirm={() => handleDeleteStaff(r._id)}
-          okText="Remove"
+          okText="Deactivate"
           cancelText="Cancel"
           okButtonProps={{ danger: true }}
         >
-          <Button size="small" danger icon={<DeleteOutlined />} className="rounded-lg text-xs" />
+          <Button size="small" danger icon={<Trash2 size={13} strokeWidth={2} />} className="rounded" />
         </Popconfirm>
       ),
     },
@@ -128,30 +142,31 @@ const StaffManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            Staff & Employee Accounts
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            Staff & Employee Roster
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Provision dedicated credentials for your reception desk and kitchen displays
+          <Text className="text-slate-500 text-xs block">
+            Manage granular credentials for receptionists, cashier desks, and kitchen display terminals
           </Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus size={14} strokeWidth={2} />}
           onClick={() => {
             form.resetFields();
             setModalOpen(true);
           }}
-          className="rounded-xl font-semibold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
           Add Staff Member
         </Button>
       </div>
 
-      <Card className="rounded-2xl shadow-sm border border-slate-100">
+      <Card className="rounded-xl shadow-xs border border-slate-200/80 bg-white">
         <Table
           dataSource={staff}
           columns={columns}
@@ -159,47 +174,65 @@ const StaffManagement = () => {
           loading={loading}
           pagination={false}
           size="middle"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="No staff members registered"
+                description="Create staff logins for your front desk managers and kitchen chefs."
+                action={() => {
+                  form.resetFields();
+                  setModalOpen(true);
+                }}
+                actionText="Add Staff Member"
+                icon={Users}
+              />
+            ),
+          }}
         />
       </Card>
 
+      {/* Provision Staff Modal */}
       <Modal
-        title="Add Staff Member"
+        title={<span className="font-semibold text-slate-900 text-sm">Provision Staff Account</span>}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleCreateStaff}
         okText="Create Account"
+        okButtonProps={{ style: { backgroundColor: '#386b58', borderColor: '#386b58' }, className: 'rounded-lg text-xs font-medium' }}
+        cancelButtonProps={{ className: 'rounded-lg text-xs' }}
+        width={500}
       >
         <Form form={form} layout="vertical" className="mt-4" requiredMark={false}>
-          <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
-            <Input placeholder="e.g. Ramesh Kumar" className="rounded-xl" />
+          <Form.Item name="name" label={<span className="text-xs font-medium text-slate-700">Full Name</span>} rules={[{ required: true }]}>
+            <Input placeholder="e.g. Ramesh Kumar" className="rounded-lg text-xs" />
           </Form.Item>
           <Form.Item
             name="email"
-            label="Login Email"
+            label={<span className="text-xs font-medium text-slate-700">Login Email</span>}
             rules={[{ required: true }, { type: 'email' }]}
           >
-            <Input placeholder="ramesh@royalpalace.com" className="rounded-xl" />
+            <Input placeholder="e.g. ramesh@royalpalace.com" className="rounded-lg text-xs font-mono" />
           </Form.Item>
           <Form.Item
             name="password"
-            label="Initial Password"
+            label={<span className="text-xs font-medium text-slate-700">Initial Password</span>}
             rules={[{ required: true }, { min: 8 }]}
           >
-            <Input.Password placeholder="Min 8 characters" className="rounded-xl" />
+            <Input.Password placeholder="At least 8 characters" className="rounded-lg text-xs" />
           </Form.Item>
           <Form.Item
             name="role"
-            label="Assigned Department Role"
+            label={<span className="text-xs font-medium text-slate-700">Assigned Department</span>}
             rules={[{ required: true }]}
             initialValue="receptionist"
           >
-            <Select className="rounded-xl">
-              <Option value="receptionist">🛎️ Receptionist / Order Manager</Option>
-              <Option value="kitchen">👨‍🍳 Kitchen Staff (KDS Display)</Option>
+            <Select className="rounded-lg text-xs">
+              <Option value="receptionist">Receptionist / Front Desk Manager</Option>
+              <Option value="kitchen">Kitchen Staff (KDS Display Terminal)</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="phone" label="Mobile Phone">
-            <Input placeholder="+91 98765 00000" className="rounded-xl" />
+          <Form.Item name="phone" label={<span className="text-xs font-medium text-slate-700">Mobile Phone</span>}>
+            <Input placeholder="+91 98765 43210" className="rounded-lg text-xs font-mono" />
           </Form.Item>
         </Form>
       </Modal>

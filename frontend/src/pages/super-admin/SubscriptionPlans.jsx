@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Row, Col, Card, Button, Badge, Typography, Modal, Form, Input, InputNumber, Switch } from 'antd';
-import { PlusOutlined, EditOutlined, CheckOutlined, CrownOutlined } from '@ant-design/icons';
+import {
+  Crown,
+  Plus,
+  Pencil,
+  Check,
+  CheckCircle2,
+} from 'lucide-react';
 import tenantService from '../../services/tenant.service';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -64,151 +71,127 @@ const SubscriptionPlans = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            SaaS Subscription Plans
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            SaaS Subscription Tiers & Quotas
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Configure pricing tiers, table quotas, feature availability and limits for tenant businesses
+          <Text className="text-slate-500 text-xs block">
+            Configure monthly & annual pricing, table allocations, and automated tenant feature gates
           </Text>
         </div>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
+          icon={<Plus size={14} strokeWidth={2} />}
           onClick={() => openModal()}
-          className="rounded-xl font-semibold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+          className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+          style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
         >
           Add New Plan
         </Button>
       </div>
 
-      <Row gutter={[20, 20]}>
+      <Row gutter={[16, 16]}>
         {plans.map((plan) => (
           <Col xs={24} md={8} key={plan._id}>
-            <Badge.Ribbon text={plan.isPopular ? 'Most Popular' : ''} color="#6366f1">
-              <Card
-                className="rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 h-full flex flex-col justify-between"
-                actions={[
-                  <Button
-                    key="edit"
-                    type="link"
-                    icon={<EditOutlined />}
-                    onClick={() => openModal(plan)}
-                    className="font-semibold text-xs text-indigo-600"
-                  >
-                    Edit Plan Settings
-                  </Button>,
-                ]}
-              >
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-base shadow-sm"
-                      style={{ backgroundColor: plan.color || '#6366f1' }}
-                    >
-                      <CrownOutlined />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-slate-800 text-lg leading-tight">{plan.name}</h3>
-                      <span className="text-[11px] text-slate-400 font-mono">tier: {plan.slug}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-slate-500 text-xs mb-6 min-h-[32px]">{plan.description}</p>
-
-                  <div className="mb-6 p-4 bg-slate-50 rounded-2xl">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-slate-900">₹{plan.monthlyPrice}</span>
-                      <span className="text-slate-500 text-xs font-medium">/month</span>
-                    </div>
-                    {plan.trialDays > 0 && (
-                      <span className="inline-block mt-1 text-emerald-600 text-[11px] font-bold">
-                        ✓ {plan.trialDays} days full-access free trial
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-2.5 mb-6">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Features & Entitlements</p>
-                    {plan.features?.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
-                        <CheckOutlined className="text-emerald-500 flex-shrink-0 text-[10px]" />
-                        <span>{f}</span>
-                      </div>
-                    ))}
-                  </div>
+            <div className={`rounded-xl border p-5 bg-white h-full flex flex-col justify-between shadow-2xs relative ${plan.isPopular ? 'border-emerald-600/70 ring-1 ring-emerald-600/30' : 'border-slate-200/80'}`}>
+              {plan.isPopular && (
+                <div className="absolute -top-2.5 right-4 bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Popular Choice
                 </div>
-
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Quota: <strong>{plan.limits?.maxTables === -1 ? 'Unlimited' : `${plan.limits?.maxTables} Tables`}</strong></span>
-                  <span className={plan.isActive ? 'text-emerald-600 font-semibold' : 'text-slate-400'}>
-                    ● {plan.isActive ? 'Active' : 'Inactive'}
+              )}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-bold text-slate-900">{plan.name}</h3>
+                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                    {plan.trialDays ? `${plan.trialDays}d trial` : 'No trial'}
                   </span>
                 </div>
-              </Card>
-            </Badge.Ribbon>
+                <p className="text-slate-500 text-xs mb-4 min-h-[36px]">{plan.description}</p>
+
+                <div className="mb-5 pb-4 border-b border-slate-100 font-mono">
+                  <span className="text-2xl font-bold text-slate-900">₹{plan.monthlyPrice}</span>
+                  <span className="text-slate-400 text-xs font-sans"> / month</span>
+                  {plan.yearlyPrice && (
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      or ₹{plan.yearlyPrice} / year
+                    </span>
+                  )}
+                </div>
+
+                {/* Limits */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mb-4 text-xs space-y-1 font-mono">
+                  <div className="flex justify-between text-slate-600">
+                    <span className="font-sans">Max Tables:</span>
+                    <strong className="text-slate-800">{plan.limits?.maxTables || 'Unlimited'}</strong>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span className="font-sans">Staff Accounts:</span>
+                    <strong className="text-slate-800">{plan.limits?.maxStaff || 'Unlimited'}</strong>
+                  </div>
+                </div>
+
+                {/* Features List */}
+                <div className="space-y-2 mb-4">
+                  {plan.features?.map((feat, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                      <Check size={13} strokeWidth={2.5} className="text-emerald-700 mt-0.5 flex-shrink-0" />
+                      <span>{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100">
+                <Button
+                  block
+                  icon={<Pencil size={13} strokeWidth={2} />}
+                  onClick={() => openModal(plan)}
+                  className="rounded-lg text-xs font-medium h-9 border-slate-200 text-slate-700"
+                >
+                  Edit Configuration
+                </Button>
+              </div>
+            </div>
           </Col>
         ))}
       </Row>
 
+      {/* Plan Modal */}
       <Modal
-        title={editingPlan ? 'Edit Subscription Tier' : 'Create New Subscription Tier'}
+        title={<span className="font-semibold text-slate-900 text-sm">{editingPlan ? 'Edit SaaS Tier' : 'Create Subscription Tier'}</span>}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
         onOk={handleSave}
-        okText={editingPlan ? 'Update Plan' : 'Save Plan'}
-        width={560}
+        okText={editingPlan ? 'Save Changes' : 'Create Plan'}
+        okButtonProps={{ style: { backgroundColor: '#386b58', borderColor: '#386b58' }, className: 'rounded-lg text-xs font-medium' }}
+        cancelButtonProps={{ className: 'rounded-lg text-xs' }}
+        width={500}
       >
         <Form form={form} layout="vertical" className="mt-4" requiredMark={false}>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name="name" label="Plan Display Name" rules={[{ required: true }]}>
-                <Input placeholder="e.g. Pro Platinum" className="rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="slug" label="Identifier Slug" rules={[{ required: true }]}>
-                <Input placeholder="pro-platinum" className="rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="monthlyPrice" label="Monthly Fee (₹)" rules={[{ required: true }]}>
-                <InputNumber min={0} className="w-full rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="trialDays" label="Free Trial Days">
-                <InputNumber min={0} className="w-full rounded-xl" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="description" label="Short Marketing Description">
-            <Input.TextArea rows={2} className="rounded-xl" />
+          <Form.Item name="name" label={<span className="text-xs font-medium text-slate-700">Tier Name</span>} rules={[{ required: true }]}>
+            <Input placeholder="e.g. Starter Cafe, Pro Dining, Enterprise" className="rounded-lg text-xs" />
           </Form.Item>
-          <Form.Item name="features" label="Features List (one feature per line)">
-            <Input.TextArea rows={4} placeholder="20 Tables&#10;Online Payments&#10;Kitchen Display System" className="rounded-xl" />
+          <Form.Item name="slug" label={<span className="text-xs font-medium text-slate-700">Machine Slug</span>} rules={[{ required: true }]}>
+            <Input placeholder="e.g. starter, pro, enterprise" className="rounded-lg text-xs font-mono" />
           </Form.Item>
-          <Row gutter={12}>
-            <Col span={8}>
-              <Form.Item name={['limits', 'maxTables']} label="Max Tables (-1 = unlimited)">
-                <InputNumber min={-1} className="w-full rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name={['limits', 'maxStaff']} label="Max Staff (-1 = unlimited)">
-                <InputNumber min={-1} className="w-full rounded-xl" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name={['limits', 'maxMenuItems']} label="Max Menu Items">
-                <InputNumber min={-1} className="w-full rounded-xl" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="isPopular" label="Highlight as Popular" valuePropName="checked">
-            <Switch />
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item name="monthlyPrice" label={<span className="text-xs font-medium text-slate-700">Monthly Cost (₹)</span>} rules={[{ required: true }]}>
+              <InputNumber min={0} className="w-full rounded-lg text-xs" />
+            </Form.Item>
+            <Form.Item name="yearlyPrice" label={<span className="text-xs font-medium text-slate-700">Yearly Cost (₹)</span>}>
+              <InputNumber min={0} className="w-full rounded-lg text-xs" />
+            </Form.Item>
+          </div>
+          <Form.Item name="description" label={<span className="text-xs font-medium text-slate-700">Tier Description</span>}>
+            <Input.TextArea rows={2} placeholder="Target customer persona and overview" className="rounded-lg text-xs" />
+          </Form.Item>
+          <Form.Item name="features" label={<span className="text-xs font-medium text-slate-700">Included Features (one per line)</span>}>
+            <Input.TextArea rows={4} placeholder="Up to 10 Tables&#10;Digital QR Ordering&#10;Kitchen Display System" className="rounded-lg text-xs font-mono" />
+          </Form.Item>
+          <Form.Item name="isPopular" label={<span className="text-xs font-medium text-slate-700">Flag as Most Popular</span>} valuePropName="checked">
+            <Switch size="small" />
           </Form.Item>
         </Form>
       </Modal>

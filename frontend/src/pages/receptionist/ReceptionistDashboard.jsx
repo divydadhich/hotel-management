@@ -5,22 +5,24 @@ import {
   Typography,
   Tag,
   Button,
-  Badge,
   Row,
   Col,
   Space,
-  Select,
 } from 'antd';
 import {
-  BellOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  SoundOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+  Bell,
+  Check,
+  X,
+  Volume2,
+  VolumeX,
+  RotateCw,
+  Clock,
+  ConciergeBell,
+} from 'lucide-react';
 import useSocket from '../../hooks/useSocket';
 import tenantService from '../../services/tenant.service';
-import { formatTime, formatDateTime } from '../../utils/formatters';
+import { formatTime } from '../../utils/formatters';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
@@ -51,13 +53,15 @@ const ReceptionistDashboard = () => {
   useEffect(() => {
     const cleanupNewOrder = onEvent('order:new', ({ order }) => {
       toast.custom(
-        (t) => (
-          <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-indigo-500/50 flex items-center gap-3">
-            <span className="text-2xl animate-bounce">🛎️</span>
+        () => (
+          <div className="bg-white text-slate-800 p-4 rounded-xl shadow-lg border border-slate-200 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center">
+              <Bell size={18} strokeWidth={2.2} />
+            </div>
             <div>
-              <p className="font-bold text-sm">NEW ORDER: #{order.orderNumber}</p>
-              <p className="text-xs text-slate-400">
-                {order.table?.number ? `Table ${order.table.number}` : 'Takeaway'} • ₹{order.grandTotal}
+              <p className="font-bold text-xs text-slate-900">NEW ORDER: {order.orderNumber}</p>
+              <p className="text-[11px] text-slate-500">
+                {order.table?.number ? `Table ${order.table.number}` : 'Counter'} • ₹{order.grandTotal}
               </p>
             </div>
           </div>
@@ -65,16 +69,16 @@ const ReceptionistDashboard = () => {
         { duration: 6000 }
       );
 
-      // Play chime if enabled
+      // Play subtle chime if enabled
       if (soundEnabled) {
         try {
           const ctx = new (window.AudioContext || window.webkitAudioContext)();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
-          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -111,7 +115,7 @@ const ReceptionistDashboard = () => {
   const handleCollectPayment = async (orderId) => {
     try {
       await tenantService.updatePaymentStatus(orderId, { paymentStatus: 'paid' });
-      toast.success('Payment marked as PAID (Cash / Counter)');
+      toast.success('Payment recorded as Paid');
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, paymentStatus: 'paid' } : o))
       );
@@ -131,45 +135,50 @@ const ReceptionistDashboard = () => {
   const renderOrderCard = (order) => (
     <Card
       key={order._id}
-      className={`rounded-2xl shadow-sm border mb-4 transition-all ${
+      className={`rounded-xl shadow-xs border mb-3.5 transition-all ${
         order.status === 'pending'
-          ? 'border-indigo-400/80 bg-indigo-50/20 ring-2 ring-indigo-500/10'
-          : 'border-slate-100 bg-white'
+          ? 'border-emerald-600/50 bg-emerald-50/15'
+          : 'border-slate-200/80 bg-white'
       }`}
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2.5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-black text-slate-900 text-base">{order.orderNumber}</span>
-            <span className="font-extrabold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-lg text-xs">
-              {order.table?.number ? `Table ${order.table.number}` : 'Counter Takeaway'}
+            <span className="font-mono font-bold text-slate-900 text-sm">{order.orderNumber}</span>
+            <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200/70">
+              {order.table?.number ? `Table ${order.table.number}` : 'Counter / Takeaway'}
             </span>
           </div>
-          <p className="text-slate-400 text-xs mt-0.5">
-            Guest: <strong>{order.customerName || 'Guest'}</strong> • {formatTime(order.createdAt)}
+          <p className="text-slate-500 text-xs mt-1">
+            Guest: <strong>{order.customerName || 'Walk-in'}</strong> • {formatTime(order.createdAt)}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-lg font-black text-slate-900 block">₹{order.grandTotal}</span>
-          <Tag color={order.paymentStatus === 'paid' ? 'green' : 'orange'} className="rounded-md uppercase text-[10px]">
-            {order.paymentStatus} ({order.paymentMethod})
+          <span className="font-mono text-base font-bold text-slate-900 block leading-tight">
+            ₹{order.grandTotal}
+          </span>
+          <Tag
+            color={order.paymentStatus === 'paid' ? 'success' : 'warning'}
+            className="rounded text-[10px] uppercase font-semibold m-0 mt-1"
+          >
+            {order.paymentStatus} ({order.paymentMethod?.replace('_', ' ')})
           </Tag>
         </div>
       </div>
 
       {/* Items list */}
-      <div className="bg-slate-50 p-3 rounded-xl mb-4 space-y-1.5 border border-slate-100">
+      <div className="bg-slate-50/80 p-3 rounded-lg mb-3 space-y-1.5 border border-slate-100">
         {order.items?.map((it, idx) => (
           <div key={idx} className="flex justify-between items-center text-xs">
-            <span className="font-semibold text-slate-800">
-              {it.quantity}× {it.name}
+            <span className="text-slate-800 font-medium">
+              <span className="font-mono font-semibold text-slate-700">{it.quantity}×</span> {it.name}
               {it.specialInstructions && (
-                <span className="text-amber-600 block text-[11px] font-normal italic">
+                <span className="text-amber-700 block text-[11px] font-normal italic">
                   Note: {it.specialInstructions}
                 </span>
               )}
             </span>
-            <span className="text-slate-500">₹{it.subtotal}</span>
+            <span className="font-mono text-slate-500">₹{it.subtotal}</span>
           </div>
         ))}
       </div>
@@ -181,21 +190,21 @@ const ReceptionistDashboard = () => {
             <Button
               size="small"
               onClick={() => handleCollectPayment(order._id)}
-              className="rounded-lg text-xs font-semibold text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+              className="rounded text-xs font-semibold text-emerald-800 border-emerald-300 hover:bg-emerald-50"
             >
               Collect Cash (₹{order.grandTotal})
             </Button>
           )}
         </div>
 
-        <Space>
+        <Space size="small">
           {order.status === 'pending' && (
             <>
               <Button
                 size="small"
                 danger
                 onClick={() => handleUpdateStatus(order._id, 'rejected')}
-                className="rounded-lg text-xs"
+                className="rounded text-xs"
               >
                 Reject
               </Button>
@@ -203,44 +212,42 @@ const ReceptionistDashboard = () => {
                 size="small"
                 type="primary"
                 onClick={() => handleUpdateStatus(order._id, 'accepted')}
-                className="rounded-lg text-xs font-bold"
-                style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
+                className="rounded text-xs font-semibold"
+                style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
               >
-                Accept Order ✓
+                Accept Order
               </Button>
             </>
           )}
+
           {order.status === 'accepted' && (
             <Button
               size="small"
-              type="primary"
               onClick={() => handleUpdateStatus(order._id, 'preparing')}
-              className="rounded-lg text-xs font-semibold"
-              style={{ backgroundColor: '#8b5cf6', borderColor: '#8b5cf6' }}
+              className="rounded text-xs font-medium"
             >
               Send to Kitchen
             </Button>
           )}
+
           {order.status === 'ready' && (
             <Button
               size="small"
               type="primary"
               onClick={() => handleUpdateStatus(order._id, 'served')}
-              className="rounded-lg text-xs font-bold"
-              style={{ backgroundColor: '#06b6d4', borderColor: '#06b6d4' }}
+              className="rounded text-xs font-semibold bg-emerald-600 border-emerald-600"
             >
-              Mark Served to Table
+              Mark Served
             </Button>
           )}
+
           {order.status === 'served' && (
             <Button
               size="small"
-              type="primary"
               onClick={() => handleUpdateStatus(order._id, 'completed')}
-              className="rounded-lg text-xs font-bold"
-              style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
+              className="rounded text-xs font-medium"
             >
-              Complete Order ✓
+              Close Order
             </Button>
           )}
         </Space>
@@ -248,53 +255,62 @@ const ReceptionistDashboard = () => {
     </Card>
   );
 
-  const newCount = filterOrders('new').length;
+  const pendingCount = filterOrders('new').length;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
             Front Desk & Order Reception
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Real-time incoming orders with instant Socket.IO push alerts and table occupancy status
+          <Text className="text-slate-500 text-xs block">
+            Monitor incoming digital guest orders in real time, confirm payment, and dispatch to kitchen
           </Text>
         </div>
-        <Space>
+        <div className="flex items-center gap-2">
           <Button
-            icon={<SoundOutlined />}
-            onClick={() => {
-              setSoundEnabled(!soundEnabled);
-              toast.success(`Sound alerts ${!soundEnabled ? 'Enabled' : 'Disabled'}`);
-            }}
-            className={`rounded-xl font-medium ${soundEnabled ? 'text-indigo-600 border-indigo-200' : 'text-slate-400'}`}
+            icon={soundEnabled ? <Volume2 size={14} strokeWidth={2} /> : <VolumeX size={14} strokeWidth={2} />}
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`rounded-lg text-xs h-9 px-3 ${soundEnabled ? 'text-emerald-800 border-emerald-200' : 'text-slate-400'}`}
           >
-            Sound {soundEnabled ? 'ON' : 'OFF'}
+            {soundEnabled ? 'Chime Active' : 'Muted'}
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={loadLiveOrders} className="rounded-xl font-medium">
-            Sync
+          <Button
+            icon={<RotateCw size={14} strokeWidth={2} />}
+            onClick={loadLiveOrders}
+            className="rounded-lg text-xs h-9 px-3.5 border-slate-200 text-slate-700"
+          >
+            Refresh
           </Button>
-        </Space>
+        </div>
       </div>
 
-      <Card className="rounded-2xl shadow-sm border border-slate-100">
+      <Card className="rounded-xl shadow-xs border border-slate-200/80 bg-white">
         <Tabs
           defaultActiveKey="new"
           items={[
             {
               key: 'new',
               label: (
-                <Badge count={newCount} offset={[10, 0]} color="#6366f1">
-                  <span className="font-bold">New Incoming ({newCount})</span>
-                </Badge>
+                <span className="flex items-center gap-2 text-xs font-medium">
+                  <span>Incoming Queue</span>
+                  {pendingCount > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-emerald-700 text-white font-bold text-[10px] flex items-center justify-center">
+                      {pendingCount}
+                    </span>
+                  )}
+                </span>
               ),
               children: (
                 <div>
                   {filterOrders('new').length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 text-xs">
-                      No pending orders. Waiting for guests to scan table QR...
-                    </div>
+                    <EmptyState
+                      title="No incoming orders"
+                      description="New table QR or counter orders will appear here instantaneously via WebSocket."
+                      icon={ConciergeBell}
+                    />
                   ) : (
                     filterOrders('new').map(renderOrderCard)
                   )}
@@ -303,11 +319,11 @@ const ReceptionistDashboard = () => {
             },
             {
               key: 'active',
-              label: `Kitchen In-Progress (${filterOrders('active').length})`,
+              label: <span className="text-xs font-medium">Kitchen Active ({filterOrders('active').length})</span>,
               children: (
                 <div>
                   {filterOrders('active').length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 text-xs">No active orders</div>
+                    <EmptyState title="No active preparation" description="Orders accepted by reception will show progress here." icon={Clock} />
                   ) : (
                     filterOrders('active').map(renderOrderCard)
                   )}
@@ -316,11 +332,11 @@ const ReceptionistDashboard = () => {
             },
             {
               key: 'served',
-              label: `Served at Table (${filterOrders('served').length})`,
+              label: <span className="text-xs font-medium">Served ({filterOrders('served').length})</span>,
               children: (
                 <div>
                   {filterOrders('served').length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 text-xs">No currently served orders</div>
+                    <EmptyState title="No served orders pending payment" description="Dishes served to tables." icon={Check} />
                   ) : (
                     filterOrders('served').map(renderOrderCard)
                   )}
@@ -328,14 +344,14 @@ const ReceptionistDashboard = () => {
               ),
             },
             {
-              key: 'completed',
-              label: `Completed History`,
+              key: 'all',
+              label: <span className="text-xs font-medium">All Live Orders ({orders.length})</span>,
               children: (
                 <div>
-                  {filterOrders('completed').length === 0 ? (
-                    <div className="text-center py-16 text-slate-400 text-xs">No completed orders today</div>
+                  {orders.length === 0 ? (
+                    <EmptyState title="No orders on record today" icon={ConciergeBell} />
                   ) : (
-                    filterOrders('completed').slice(0, 20).map(renderOrderCard)
+                    orders.map(renderOrderCard)
                   )}
                 </div>
               ),

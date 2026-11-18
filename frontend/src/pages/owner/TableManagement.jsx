@@ -4,7 +4,6 @@ import {
   Col,
   Card,
   Button,
-  Tag,
   Modal,
   Form,
   Input,
@@ -16,21 +15,27 @@ import {
   Divider,
 } from 'antd';
 import {
-  PlusOutlined,
-  QrcodeOutlined,
-  DownloadOutlined,
-  PrinterOutlined,
-  ReloadOutlined,
-  ClearOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+  Plus,
+  QrCode,
+  Download,
+  Printer,
+  RotateCw,
+  Trash2,
+  Users,
+  Eye,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import tenantService from '../../services/tenant.service';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const TableManagement = () => {
+  const navigate = useNavigate();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tableModalOpen, setTableModalOpen] = useState(false);
@@ -58,7 +63,7 @@ const TableManagement = () => {
     try {
       const values = await form.validateFields();
       await tenantService.createTable(values);
-      toast.success(`Table ${values.number} created with dedicated QR code!`);
+      toast.success(`Table ${values.number} created with QR code`);
       setTableModalOpen(false);
       form.resetFields();
       loadTables();
@@ -70,7 +75,7 @@ const TableManagement = () => {
   const handleRegenerateQR = async (id) => {
     try {
       const res = await tenantService.regenerateQR(id);
-      toast.success('QR Code regenerated! Previous QR is now revoked.');
+      toast.success('QR Code regenerated. Previous QR revoked.');
       setSelectedTable(res.data?.table);
       loadTables();
     } catch {
@@ -81,7 +86,7 @@ const TableManagement = () => {
   const handleResetTable = async (id) => {
     try {
       await tenantService.resetTable(id);
-      toast.success('Table session closed and marked Available');
+      toast.success('Table session cleared and marked Available');
       loadTables();
     } catch {
       toast.error('Failed to reset table');
@@ -91,7 +96,7 @@ const TableManagement = () => {
   const handleDeleteTable = async (id) => {
     try {
       await tenantService.deleteTable(id);
-      toast.success('Table deleted');
+      toast.success('Table removed');
       loadTables();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Cannot delete table with active orders');
@@ -102,38 +107,43 @@ const TableManagement = () => {
     if (!table.qrCodeUrl) return;
     const a = document.createElement('a');
     a.href = table.qrCodeUrl;
-    a.download = `QRCode-${table.number}.png`;
+    a.download = `QRCode-Table-${table.number}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast.success(`Downloaded QR Code for ${table.number}`);
+    toast.success(`Downloaded QR Code for Table ${table.number}`);
   };
 
   const printQR = (table) => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Print QR - Table ${table.number}</title>
+          <meta charset="utf-8">
+          <title>QR Standee - Table ${table.number}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; text-align: center; padding: 40px; margin: 0; }
-            .card { border: 2px solid #e2e8f0; border-radius: 24px; padding: 32px; max-width: 340px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-            h1 { font-size: 24px; margin: 0 0 4px 0; color: #0f172a; }
-            p { font-size: 13px; color: #64748b; margin: 0 0 20px 0; }
-            img { width: 220px; height: 220px; border-radius: 12px; }
-            .table-badge { display: inline-block; background: #6366f1; color: white; font-weight: bold; padding: 6px 16px; border-radius: 999px; margin-top: 16px; font-size: 14px; }
-            .hint { font-size: 11px; color: #94a3b8; margin-top: 16px; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 40px 20px; margin: 0; background: #fff; }
+            .card { border: 1.5px solid #e2e8f0; border-radius: 20px; padding: 36px 28px; max-width: 320px; margin: 0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
+            h1 { font-size: 22px; font-weight: 800; margin: 0 0 6px 0; color: #0f172a; letter-spacing: -0.02em; }
+            p { font-size: 13px; color: #64748b; margin: 0 0 24px 0; line-height: 1.4; }
+            .qr-wrap { background: #fafafa; border: 1px solid #f1f5f9; border-radius: 16px; padding: 14px; display: inline-block; margin-bottom: 20px; }
+            img { width: 200px; height: 200px; display: block; border-radius: 8px; }
+            .table-badge { display: inline-block; background: #386b58; color: #ffffff; font-weight: 700; padding: 7px 22px; border-radius: 999px; font-size: 14px; letter-spacing: 0.02em; }
+            .hint { font-size: 11px; color: #94a3b8; margin-top: 22px; font-weight: 500; }
           </style>
         </head>
         <body>
           <div class="card">
-            <h1>Scan to Order</h1>
-            <p>Scan with your phone camera to view menu & place order</p>
-            <img src="${table.qrCodeUrl}" alt="QR Code" />
+            <h1>Scan to View Menu</h1>
+            <p>Scan with your mobile camera to explore our menu and order directly</p>
+            <div class="qr-wrap">
+              <img src="${table.qrCodeUrl}" alt="Table ${table.number} QR" />
+            </div>
             <div>
               <span class="table-badge">Table ${table.number}</span>
             </div>
-            <div class="hint">No app download required • Powered by HotelSaaS</div>
+            <div class="hint">No app download required • Fast & Contactless</div>
           </div>
           <script>
             window.onload = function() { window.print(); window.close(); }
@@ -144,224 +154,267 @@ const TableManagement = () => {
     printWindow.document.close();
   };
 
-  const statusColors = {
-    available: 'green',
-    occupied: 'orange',
-    order_pending: 'purple',
-    cleaning: 'blue',
+  const statusStyles = {
+    available: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+    occupied: 'bg-amber-50 text-amber-700 border-amber-200/80',
+    order_pending: 'bg-purple-50 text-purple-700 border-purple-200/80',
+    cleaning: 'bg-blue-50 text-blue-700 border-blue-200/80',
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-6 py-5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <Title level={4} className="!mb-0 !font-extrabold !text-slate-900">
-            Table & QR Code Management
+          <Title level={4} className="!mb-0.5 !font-bold !text-slate-900 !tracking-tight">
+            Tables & Contactless QR Fleet
           </Title>
-          <Text className="text-slate-500 text-xs mt-0.5 block">
-            Generate cryptographic table QR codes, download printable tent cards, and manage live occupancy
+          <Text className="text-slate-500 text-xs block">
+            Provision unique QR tokens, print branded table tent cards, and manage live dining occupancy
           </Text>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            form.resetFields();
-            setTableModalOpen(true);
-          }}
-          className="rounded-xl font-semibold shadow-sm"
-          style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
-        >
-          Add New Table
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            icon={<Eye size={14} strokeWidth={2} />}
+            onClick={() => navigate('/demo/customer')}
+            className="rounded-lg font-medium text-xs h-9 px-3.5 border-slate-200 text-slate-700 hover:text-slate-900"
+          >
+            Preview Guest Menu
+          </Button>
+          <Button
+            type="primary"
+            icon={<Plus size={14} strokeWidth={2} />}
+            onClick={() => {
+              form.resetFields();
+              setTableModalOpen(true);
+            }}
+            className="rounded-lg font-medium text-xs h-9 px-4 shadow-xs"
+            style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
+          >
+            Add New Table
+          </Button>
+        </div>
       </div>
 
-      <Row gutter={[16, 16]}>
-        {tables.map((table) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={table._id}>
-            <Card
-              className="rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300"
-              actions={[
-                <Button
-                  key="qr"
-                  type="text"
-                  icon={<QrcodeOutlined />}
-                  onClick={() => {
-                    setSelectedTable(table);
-                    setQrModalOpen(true);
-                  }}
-                  className="text-xs font-semibold text-indigo-600"
-                >
-                  View QR
-                </Button>,
-                <Button
-                  key="print"
-                  type="text"
-                  icon={<PrinterOutlined />}
-                  onClick={() => printQR(table)}
-                  className="text-xs font-semibold text-slate-600"
-                >
-                  Print
-                </Button>,
-                <Popconfirm
-                  key="reset"
-                  title="Reset table to Available?"
-                  description="Closes dining session for the customer."
-                  onConfirm={() => handleResetTable(table._id)}
-                  okText="Reset"
-                  cancelText="Cancel"
-                >
-                  <Button type="text" icon={<ClearOutlined />} className="text-xs text-amber-600">
-                    Reset
-                  </Button>
-                </Popconfirm>,
-              ]}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-black text-slate-900 text-xl tracking-tight leading-none">
-                    {table.number}
-                  </h3>
-                  <span className="text-slate-400 text-xs font-medium mt-1 block">
-                    {table.label || `Table ${table.number}`}
-                  </span>
-                </div>
-                <Tag color={statusColors[table.status] || 'default'} className="rounded-md capitalize text-xs">
-                  {table.status?.replace('_', ' ')}
-                </Tag>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-                <span>Capacity: <strong>{table.capacity || 4} Guests</strong></span>
-              </div>
-
-              {/* QR Preview Thumbnail */}
-              <div
-                onClick={() => {
-                  setSelectedTable(table);
-                  setQrModalOpen(true);
-                }}
-                className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors"
-              >
-                {table.qrCodeUrl ? (
-                  <img src={table.qrCodeUrl} alt="QR Thumbnail" className="w-24 h-24 object-contain rounded-lg" />
-                ) : (
-                  <div className="w-24 h-24 flex items-center justify-center text-slate-300">
-                    <QrcodeOutlined className="text-4xl" />
+      {tables.length === 0 && !loading ? (
+        <Card className="rounded-xl border border-slate-200/80 bg-white">
+          <EmptyState
+            title="No dining tables created"
+            description="Add your first table to automatically generate a cryptographic ordering QR code."
+            action={() => setTableModalOpen(true)}
+            actionText="Create Table"
+            icon={QrCode}
+          />
+        </Card>
+      ) : (
+        <Row gutter={[16, 16]}>
+          {tables.map((table) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={table._id}>
+              <Card className="rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 transition-all duration-200 shadow-2xs overflow-hidden">
+                <div className="p-4">
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-400 block mb-0.5">
+                        {table.section || 'Dining Hall'}
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 leading-none">
+                        Table {table.number}
+                      </h3>
+                    </div>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border capitalize ${
+                        statusStyles[table.status] || 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {table.status?.replace('_', ' ')}
+                    </span>
                   </div>
-                )}
-                <span className="text-[11px] text-indigo-600 font-semibold mt-2">Click to inspect</span>
-              </div>
 
-              <div className="flex justify-end mt-3">
-                <Popconfirm
-                  title="Delete table?"
-                  onConfirm={() => handleDeleteTable(table._id)}
-                  okText="Delete"
-                  cancelText="Cancel"
-                  okButtonProps={{ danger: true }}
-                >
-                  <Button type="text" size="small" danger icon={<DeleteOutlined />} className="text-xs">
-                    Remove Table
-                  </Button>
-                </Popconfirm>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+                  {/* QR Image Preview */}
+                  <div
+                    onClick={() => {
+                      setSelectedTable(table);
+                      setQrModalOpen(true);
+                    }}
+                    className="cursor-pointer group relative my-3 p-3 bg-slate-50 border border-slate-100 rounded-lg flex flex-col items-center justify-center hover:bg-slate-100/70 transition-colors"
+                  >
+                    {table.qrCodeUrl ? (
+                      <img
+                        src={table.qrCodeUrl}
+                        alt={`Table ${table.number} QR`}
+                        className="w-28 h-28 object-contain rounded"
+                      />
+                    ) : (
+                      <div className="w-28 h-28 flex items-center justify-center text-slate-400">
+                        <QrCode size={36} strokeWidth={1.5} />
+                      </div>
+                    )}
+                    <span className="text-[10px] text-slate-400 group-hover:text-slate-700 font-medium mt-1 flex items-center gap-1">
+                      <Eye size={11} strokeWidth={2} /> Click to expand
+                    </span>
+                  </div>
 
-      {/* Add Table Modal */}
+                  {/* Metadata info */}
+                  <div className="flex items-center justify-between text-xs text-slate-500 py-1.5 border-t border-slate-100">
+                    <span className="flex items-center gap-1.5">
+                      <Users size={13} strokeWidth={2} className="text-slate-400" />
+                      <span>{table.capacity || 4} Guests</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-400 truncate max-w-[100px]">
+                      {table.qrToken ? `...${table.qrToken.slice(-6)}` : '-'}
+                    </span>
+                  </div>
+
+                  {/* Quick Card Actions */}
+                  <div className="grid grid-cols-3 gap-1.5 pt-3 border-t border-slate-100">
+                    <Button
+                      size="small"
+                      icon={<Download size={12} strokeWidth={2} />}
+                      onClick={() => downloadQRPNG(table)}
+                      className="rounded text-[11px] h-7 px-1 text-slate-600"
+                    >
+                      PNG
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<Printer size={12} strokeWidth={2} />}
+                      onClick={() => printQR(table)}
+                      className="rounded text-[11px] h-7 px-1 text-slate-600"
+                    >
+                      Print
+                    </Button>
+                    <Popconfirm
+                      title="Clear table session?"
+                      description="Marks this table Available and closes active session."
+                      onConfirm={() => handleResetTable(table._id)}
+                      okText="Reset"
+                      cancelText="Cancel"
+                    >
+                      <Button
+                        size="small"
+                        icon={<RotateCw size={12} strokeWidth={2} />}
+                        className="rounded text-[11px] h-7 px-1 text-slate-600"
+                      >
+                        Reset
+                      </Button>
+                    </Popconfirm>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+
+      {/* Create Table Modal */}
       <Modal
-        title="Add Restaurant Table"
+        title={<span className="font-semibold text-slate-900 text-sm">Add Table & Generate QR</span>}
         open={tableModalOpen}
         onCancel={() => setTableModalOpen(false)}
         onOk={handleCreateTable}
-        okText="Generate Table & QR"
+        okText="Create Table"
+        okButtonProps={{ style: { backgroundColor: '#386b58', borderColor: '#386b58' }, className: 'rounded-lg text-xs font-medium' }}
+        cancelButtonProps={{ className: 'rounded-lg text-xs' }}
       >
         <Form form={form} layout="vertical" className="mt-4" requiredMark={false}>
           <Form.Item
             name="number"
-            label="Table Number / Code"
-            rules={[{ required: true, message: 'Please specify table number (e.g. T-06)' }]}
+            label={<span className="text-xs font-medium text-slate-700">Table Number / Identifier</span>}
+            rules={[{ required: true, message: 'Please enter table number (e.g. 01, T-12, Rooftop-3)' }]}
           >
-            <Input placeholder="e.g. T-06, VIP-01, Patio-3" className="rounded-xl" />
+            <Input placeholder="e.g. 01" className="rounded-lg text-xs" />
           </Form.Item>
-          <Form.Item name="label" label="Friendly Display Label">
-            <Input placeholder="e.g. Window Booth 2, Outdoor Gazebo" className="rounded-xl" />
+          <Form.Item
+            name="section"
+            label={<span className="text-xs font-medium text-slate-700">Dining Section (Optional)</span>}
+            initialValue="Main Hall"
+          >
+            <Input placeholder="e.g. Indoor, Rooftop, Patio, AC Section" className="rounded-lg text-xs" />
           </Form.Item>
-          <Form.Item name="capacity" label="Seating Capacity (Guests)" initialValue={4}>
-            <InputNumber min={1} max={50} className="w-full rounded-xl" />
-          </Form.Item>
-          <Form.Item name="description" label="Notes / Floor Location">
-            <Input.TextArea rows={2} placeholder="e.g. Near bar, requires high chair" className="rounded-xl" />
+          <Form.Item
+            name="capacity"
+            label={<span className="text-xs font-medium text-slate-700">Seating Capacity</span>}
+            initialValue={4}
+          >
+            <InputNumber min={1} max={50} className="w-full rounded-lg text-xs" />
           </Form.Item>
         </Form>
       </Modal>
 
-      {/* QR Details & Download Modal */}
+      {/* QR Details & Actions Modal */}
       <Modal
         title={
-          <span className="font-extrabold text-slate-900">
-            Table {selectedTable?.number} — QR Code
+          <span className="font-semibold text-slate-900 text-sm">
+            Table {selectedTable?.number} — Contactless QR Code
           </span>
         }
         open={qrModalOpen}
         onCancel={() => setQrModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setQrModalOpen(false)} className="rounded-xl">
-            Close
-          </Button>,
-          <Button
-            key="print"
-            icon={<PrinterOutlined />}
-            onClick={() => printQR(selectedTable)}
-            className="rounded-xl"
-          >
-            Print Card
-          </Button>,
-          <Button
-            key="download"
-            type="primary"
-            icon={<DownloadOutlined />}
-            onClick={() => downloadQRPNG(selectedTable)}
-            className="rounded-xl"
-            style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
-          >
-            Download PNG
-          </Button>,
-        ]}
+        footer={null}
+        width={420}
       >
         {selectedTable && (
-          <div className="text-center py-4 space-y-4">
-            <div className="p-4 bg-white border border-slate-200 rounded-3xl inline-block shadow-sm">
-              <img src={selectedTable.qrCodeUrl} alt="Table QR Code" className="w-56 h-56 mx-auto object-contain" />
+          <div className="py-2 text-center">
+            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl inline-block my-2">
+              <img
+                src={selectedTable.qrCodeUrl}
+                alt={`Table ${selectedTable.number} QR`}
+                className="w-56 h-56 mx-auto object-contain"
+              />
+            </div>
+            <p className="text-xs text-slate-500 font-mono mt-1 break-all px-4">
+              {selectedTable.qrToken ? `Token: ${selectedTable.qrToken}` : ''}
+            </p>
+
+            <Divider className="my-4" />
+
+            <div className="grid grid-cols-2 gap-2 text-left mb-4">
+              <Button
+                icon={<Download size={14} strokeWidth={2} />}
+                onClick={() => downloadQRPNG(selectedTable)}
+                className="rounded-lg text-xs font-medium h-9"
+              >
+                Download PNG
+              </Button>
+              <Button
+                type="primary"
+                icon={<Printer size={14} strokeWidth={2} />}
+                onClick={() => printQR(selectedTable)}
+                className="rounded-lg text-xs font-medium h-9"
+                style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
+              >
+                Print Standee Card
+              </Button>
             </div>
 
-            <div>
-              <p className="text-xs text-slate-400 font-mono break-all px-4">
-                {selectedTable.qrCodeData}
-              </p>
-              <div className="mt-2 text-xs text-slate-500">
-                Seating Capacity: <strong>{selectedTable.capacity} guests</strong> • Status: <strong>{selectedTable.status}</strong>
-              </div>
-            </div>
-
-            <Divider />
-
-            <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-left text-xs text-amber-800">
-              <p className="font-bold mb-1">🔐 Security & Anti-Fraud Notice</p>
-              <p className="mb-2">
-                Table tokens are cryptographically generated. If a table card is damaged or compromised, you can revoke the URL and regenerate a new token below.
-              </p>
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
               <Popconfirm
-                title="Revoke current QR and regenerate a new cryptographic token?"
+                title="Regenerate QR Code?"
+                description="The printed QR code will stop working immediately."
                 onConfirm={() => handleRegenerateQR(selectedTable._id)}
                 okText="Regenerate"
                 cancelText="Cancel"
+                okButtonProps={{ danger: true }}
               >
-                <Button size="small" icon={<ReloadOutlined />} danger className="rounded-lg text-xs">
-                  Revoke & Regenerate QR
+                <Button size="small" icon={<RotateCw size={12} strokeWidth={2} />} className="text-xs text-amber-700">
+                  Revoke & Regenerate
+                </Button>
+              </Popconfirm>
+
+              <Popconfirm
+                title="Delete this table?"
+                description="This table cannot be restored."
+                onConfirm={async () => {
+                  await handleDeleteTable(selectedTable._id);
+                  setQrModalOpen(false);
+                }}
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+              >
+                <Button size="small" danger icon={<Trash2 size={12} strokeWidth={2} />} className="text-xs">
+                  Delete Table
                 </Button>
               </Popconfirm>
             </div>

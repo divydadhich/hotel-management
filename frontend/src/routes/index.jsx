@@ -30,6 +30,7 @@ import KitchenDashboard from '../pages/kitchen/KitchenDashboard';
 
 // Customer QR Menu
 import CustomerMenu from '../pages/customer/CustomerMenu';
+import CustomerDemo from '../pages/customer/CustomerDemo';
 
 // Fallbacks
 import NotFound from '../pages/NotFound';
@@ -49,6 +50,7 @@ const AppRoutes = () => (
   <Routes>
     {/* Public Customer QR Landing Routes */}
     <Route element={<CustomerLayout />}>
+      <Route path="/demo/customer" element={<CustomerDemo />} />
       <Route path="/menu/:slug/table/:token" element={<CustomerMenu />} />
       <Route path="/menu/:slug" element={<CustomerMenu />} />
     </Route>

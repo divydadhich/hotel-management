@@ -356,7 +356,7 @@ const TenantCreate = () => {
                   type="primary"
                   onClick={nextStep}
                   className="rounded-xl font-semibold shadow-sm"
-                  style={{ backgroundColor: '#6366f1', borderColor: '#6366f1' }}
+                  style={{ backgroundColor: '#386b58', borderColor: '#386b58' }}
                 >
                   Continue
                 </Button>
